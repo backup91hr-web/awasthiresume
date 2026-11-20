@@ -1,9 +1,18 @@
+<!doctype html>
+<html lang="pa">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Awasthi Resume</title>
 <meta name="description" content="Resume vich mobile number te email ID lukaun wala free tool. PDF, Word, scanned PDF te photo.">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
 <style>
+  [hidden] { display: none !important; }
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; }
+  img { max-width: 100%; }
   /* Layout: one centred working column. Intro + example, then the drop zone, then one card per file. */
   :root {
     --bg: #f3f5f7;
@@ -87,9 +96,42 @@
   .toast { font-size: 14px; color: var(--ok); }
   .note { font-size: 13px; color: var(--muted); max-width: 70ch; }
   .note li { margin-bottom: 4px; }
+
+  /* candidate list */
+  #candidates { display: grid; gap: 16px; }
+  #candidates h2 { font-family: var(--font-display); font-size: 22px; margin: 0; }
+  .sub { color: var(--muted); font-size: 14px; margin: 2px 0 0; }
+  .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  .grid-form .full { grid-column: 1 / -1; }
+  .field { display: grid; gap: 4px; font-size: 13px; color: var(--muted); min-width: 0; }
+  .field input, .field select, .field textarea, .toolbar input, .toolbar select {
+    font: inherit; font-size: 15px; color: var(--fg); background: var(--surface); border: 1px solid var(--line);
+    border-radius: 7px; padding: 8px 10px; width: 100%; min-width: 0; }
+  .field textarea { min-height: 64px; resize: vertical; }
+  input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .toolbar input { flex: 1 1 220px; width: auto; }
+  .toolbar select { width: auto; }
+  .ctable { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  .ctable table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .ctable th, .ctable td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; white-space: nowrap; }
+  .ctable tr:last-child td { border-bottom: 0; }
+  .ctable th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 500; background: var(--bg); }
+  .ctable td.wrap { white-space: normal; min-width: 180px; }
+  .ctable td.strong { font-weight: 600; }
+  .ctable td.small, .small { font-size: 12px; }
+  button.small { padding: 4px 10px; font-size: 13px; margin-right: 6px; }
+  button.danger { color: var(--err); }
+  .chip.st-shortlisted, .chip.st-selected { background: var(--ok-soft); color: var(--ok); }
+  .chip.st-sent-to-client { background: var(--warn-soft); color: var(--warn); }
+  .chip.st-rejected { background: var(--line); color: var(--muted); }
+  #c-msg { font-size: 14px; color: var(--ok); min-height: 1.2em; }
+  #c-msg.err { color: var(--err); }
+  .login { display: grid; gap: 12px; max-width: 380px; }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
-
+</head>
+<body>
 <div class="wrap">
   <header>
     <h1>Awasthi Resume</h1>
@@ -131,6 +173,64 @@
 
   <section id="results" aria-live="polite"></section>
 
+
+  <section class="panel" id="candidates" hidden>
+    <div class="row">
+      <div>
+        <h2>Candidate list</h2>
+        <p class="sub">Sirf team layi. Asli mobile number te email ethe save nahi hunde.</p>
+      </div>
+    </div>
+
+    <div class="login" id="c-login">
+      <form id="c-login-form" class="login">
+        <label class="field">Email<input id="c-email" type="email" autocomplete="username" required></label>
+        <label class="field">Password<input id="c-pass" type="password" autocomplete="current-password" required></label>
+        <button class="primary" type="submit">Login</button>
+      </form>
+    </div>
+
+    <div id="c-app" hidden>
+      <div class="row" style="margin-bottom:12px">
+        <span class="sub">Login: <strong id="c-who"></strong></span>
+        <button class="ghost small" id="c-logout" type="button">Logout</button>
+      </div>
+      <form id="c-form" class="grid-form">
+        <label class="field">Naam *<input id="f-name" required maxlength="200" autocomplete="off"></label>
+        <label class="field">Post / Job<input id="f-post" maxlength="200" placeholder="jiven Accountant"></label>
+        <label class="field">City<input id="f-city" maxlength="100" placeholder="jiven Ludhiana"></label>
+        <label class="field">Experience (saal)<input id="f-experience_years" type="number" min="0" max="79" step="0.5"></label>
+        <label class="field">Status
+          <select id="f-status">
+            <option>New</option><option>Shortlisted</option><option>Sent to client</option><option>Selected</option><option>Rejected</option>
+          </select>
+        </label>
+        <label class="field">Masked resume file<input id="f-resume_file" maxlength="300" placeholder="aap bhar jaandi hai"></label>
+        <label class="field full">Skills<input id="f-skills" maxlength="1000" placeholder="jiven Tally, GST, Excel"></label>
+        <label class="field full">Notes<textarea id="f-notes" maxlength="2000"></textarea></label>
+        <div class="full row" style="justify-content:flex-start">
+          <button class="primary" id="c-save" type="submit">Candidate add karo</button>
+          <button class="ghost" id="c-cancel" type="button" hidden>Cancel</button>
+        </div>
+      </form>
+      <div id="c-msg" role="status" aria-live="polite"></div>
+      <div class="toolbar" style="margin:8px 0 12px">
+        <input id="c-search" type="search" placeholder="Naam, skill, city ja post naal labho">
+        <select id="c-filter" aria-label="Status filter">
+          <option value="">Saare status</option><option>New</option><option>Shortlisted</option><option>Sent to client</option><option>Selected</option><option>Rejected</option>
+        </select>
+        <span class="sub" id="c-count"></span>
+      </div>
+      <div class="ctable">
+        <table>
+          <thead><tr><th>Naam</th><th>Post</th><th>Skills</th><th>City</th><th>Exp.</th><th>Status</th><th>Resume</th><th>Date</th><th></th></tr></thead>
+          <tbody id="c-rows"></tbody>
+        </table>
+      </div>
+      <p class="sub" id="c-empty" hidden>Hune list khaali hai. Upar form bhar ke pehla candidate add karo, ja resume mask karke "Candidate list vich pao" dabao.</p>
+    </div>
+  </section>
+
   <ul class="note">
     <li>Scanned resume te photo nu OCR naal padhya janda hai. Pehli vaari OCR shuru hon vich 10-20 second lag sakde ne.</li>
     <li>OCR 100% pakka nahi hunda. Dhundli photo vich number miss ho sakda hai, is layi "Dekho" khol ke check kar lena.</li>
@@ -144,6 +244,8 @@
 <script src="lib/tesseract.min.js"></script>
 <script src="lib/jszip.min.js"></script>
 <script src="lib/jspdf.umd.min.js"></script>
+<script src="lib/supabase.js"></script>
+<script src="config.js"></script>
 <script>
 (() => {
   "use strict";
@@ -189,6 +291,7 @@
     for (const [s, e, , masked] of findMatches(text)) { out += text.slice(last, s) + masked; last = e; }
     return out + text.slice(last);
   }
+  window.AwasthiMask = { maskText };
 
   // ---------------------------------------------------------------- OCR
   let ocrWorker = null;
@@ -489,6 +592,10 @@
       dl.disabled = false;
       dl.onclick = () => save(outName, res.blob);
       done.push({ name: outName, blob: res.blob });
+      const guessName = file.name.replace(/\.[^.]+$/, "").replace(/[_\-.]+/g, " ")
+        .replace(/\b(resume|cv|biodata|updated|final|new|latest|copy|\d+)\b/gi, " ").replace(/\s+/g, " ").trim()
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+      document.dispatchEvent(new CustomEvent("resume-masked", { detail: { card, outName, guessName } }));
       zipBtn.hidden = done.length < 2;
     } catch (e) {
       console.error(e);
@@ -528,3 +635,6 @@
   });
 })();
 </script>
+<script src="candidates.js"></script>
+</body>
+</html>
