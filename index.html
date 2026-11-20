@@ -1,0 +1,530 @@
+<title>Awasthi Resume</title>
+<meta name="description" content="Resume vich mobile number te email ID lukaun wala free tool. PDF, Word, scanned PDF te photo.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+  /* Layout: one centred working column. Intro + example, then the drop zone, then one card per file. */
+  :root {
+    --bg: #f3f5f7;
+    --surface: #ffffff;
+    --fg: #17202b;
+    --muted: #5d6b7a;
+    --line: #dde3ea;
+    --accent: #1f5fbf;
+    --accent-soft: #e7effb;
+    --ok: #18794e;
+    --ok-soft: #e4f4ec;
+    --warn: #9a5b00;
+    --warn-soft: #fbf0dc;
+    --err: #b42318;
+    --mask: #0f2f5c;
+    --font-display: "Space Grotesk", "IBM Plex Sans", system-ui, sans-serif;
+    --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #10151c; --surface: #18202a; --fg: #e6ebf1; --muted: #93a1b1; --line: #2a3542;
+      --accent: #6aa3ff; --accent-soft: #1d2b40; --ok: #5cd39a; --ok-soft: #173326;
+      --warn: #f0b75a; --warn-soft: #3a2c14; --err: #ff8a7d; --mask: #b9d3ff; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #10151c; --surface: #18202a; --fg: #e6ebf1; --muted: #93a1b1; --line: #2a3542;
+    --accent: #6aa3ff; --accent-soft: #1d2b40; --ok: #5cd39a; --ok-soft: #173326;
+    --warn: #f0b75a; --warn-soft: #3a2c14; --err: #ff8a7d; --mask: #b9d3ff; color-scheme: dark;
+  }
+  body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+  .wrap { max-width: 860px; margin: 0 auto; padding-block: 36px 56px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+    display: grid; gap: 20px; }
+  h1 { font-family: var(--font-display); font-size: 30px; line-height: 1.15; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+  .lede { margin: 6px 0 0; color: var(--muted); max-width: 62ch; }
+  code, .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+  .example { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow-x: auto; }
+  .example table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .example th, .example td { padding: 9px 14px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .example tr:last-child td { border-bottom: 0; }
+  .example th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 500; }
+  .arrow { color: var(--muted); }
+  .masked { color: var(--mask); font-weight: 500; }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; display: grid; gap: 16px; }
+  .drop { display: grid; place-items: center; gap: 4px; text-align: center; padding: 34px 16px; border: 2px dashed var(--line); border-radius: 10px; cursor: pointer; transition: border-color .15s, background .15s; }
+  .drop:hover, .drop.over, .drop:focus-within { border-color: var(--accent); background: var(--accent-soft); }
+  .drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .drop strong { font-size: 16px; }
+  .drop span { color: var(--muted); font-size: 14px; }
+  .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+  .opts { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; color: var(--muted); font-size: 14px; }
+  select { font: inherit; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; }
+
+  button { font: inherit; font-weight: 500; border-radius: 8px; padding: 9px 16px; cursor: pointer; border: 1px solid transparent; }
+  button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .primary { background: var(--accent); color: var(--surface); }
+  .ghost { background: transparent; color: var(--accent); border-color: var(--line); }
+  button:disabled { opacity: .5; cursor: default; }
+
+  #results { display: grid; gap: 14px; }
+  .file { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: grid; gap: 12px; min-width: 0; }
+  .file-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+  .name { font-weight: 600; word-break: break-all; min-width: 0; }
+  .chip { display: inline-block; font-size: 12px; font-weight: 500; padding: 2px 9px; border-radius: 99px; margin-left: 8px; vertical-align: 1px; background: var(--accent-soft); color: var(--accent); }
+  .chip.ok { background: var(--ok-soft); color: var(--ok); }
+  .chip.warn { background: var(--warn-soft); color: var(--warn); }
+  .status { font-size: 14px; color: var(--muted); }
+  .status.err { color: var(--err); }
+  .bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+  .changes { overflow-x: auto; }
+  .changes table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .changes td, .changes th { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+  .changes th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 500; }
+  .preview { max-width: 100%; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+  details summary { cursor: pointer; color: var(--accent); font-size: 14px; }
+  .toast { font-size: 14px; color: var(--ok); }
+  .note { font-size: 13px; color: var(--muted); max-width: 70ch; }
+  .note li { margin-bottom: 4px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Awasthi Resume</h1>
+    <p class="lede">Resume pao, te mobile number de pehle 8 digit te email ID <code>X</code> ban jaange. PDF, Word (.docx), scanned PDF te photo (JPG/PNG) sab chalde ne. Files tuhade browser vich hi process hundian ne, kise server te upload nahi hundian.</p>
+  </header>
+
+  <div class="example" aria-label="Misaal">
+    <table>
+      <tr><th>Resume vich</th><th></th><th>Masked</th></tr>
+      <tr><td class="mono">98765 43210</td><td class="arrow">→</td><td class="mono masked">XXXXX XXX10</td></tr>
+      <tr><td class="mono">+91-9123456789</td><td class="arrow">→</td><td class="mono masked">+91-XXXXXXXX89</td></tr>
+      <tr><td class="mono">rahul.sharma92@gmail.com</td><td class="arrow">→</td><td class="mono masked">XXXXXXXXXX.com</td></tr>
+    </table>
+  </div>
+
+  <section class="panel">
+    <label class="drop" id="drop">
+      <input type="file" id="files" multiple accept=".pdf,.docx,.jpg,.jpeg,.png,.webp,.bmp">
+      <strong>Resume ethe chuno ja kheench ke chhado</strong>
+      <span>Ikko vaari kai files chun sakde ho · PDF, DOCX, JPG, PNG</span>
+    </label>
+    <div class="row">
+      <div class="opts">
+        <label for="visible">Mobile de aakhri</label>
+        <select id="visible">
+          <option value="0">0</option>
+          <option value="2" selected>2</option>
+          <option value="4">4</option>
+        </select>
+        <span>digit dikhao</span>
+      </div>
+      <div class="row" style="justify-content:flex-end">
+        <button class="ghost" id="sample" type="button">Sample resume naal try karo</button>
+        <button class="primary" id="zipall" type="button" hidden>Saariyan ZIP vich download karo</button>
+      </div>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </section>
+
+  <section id="results" aria-live="polite"></section>
+
+  <ul class="note">
+    <li>Scanned resume te photo nu OCR naal padhya janda hai. Pehli vaari OCR shuru hon vich 10-20 second lag sakde ne.</li>
+    <li>OCR 100% pakka nahi hunda. Dhundli photo vich number miss ho sakda hai, is layi "Dekho" khol ke check kar lena.</li>
+    <li>Masked PDF tasveer wale pages vich bandi hai, taan ki asli number kise vi tarah copy ja recover na ho sake.</li>
+    <li>Purani .doc file nu pehlan Word vich .docx bana ke save karo.</li>
+  </ul>
+  <footer class="note">© Awasthi Resume</footer>
+</div>
+
+<script src="lib/pdf.min.js"></script>
+<script src="lib/tesseract.min.js"></script>
+<script src="lib/jszip.min.js"></script>
+<script src="lib/jspdf.umd.min.js"></script>
+<script>
+(() => {
+  "use strict";
+  const abs = (p) => new URL(p, location.href).href;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = abs("lib/pdf.worker.min.js");
+
+  // ---------------------------------------------------------------- matching
+  const EMAIL_MASK = "XXXXXXXXXX";
+  const EMAIL_RE = /[A-Za-z0-9._%+\-]+\s?@\s?[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)*\.[A-Za-z]{2,}/g;
+  const PHONE_RE = /(?<![\w@])\+?\(?\d[\d \-().]{8,20}\d(?![\w@])/g;
+  const visibleDigits = () => Number(document.getElementById("visible").value);
+
+  function maskEmail(e) {
+    const tld = e.replace(/\s/g, "").split(".").pop();
+    return `${EMAIL_MASK}.${tld}`;
+  }
+  function maskPhone(p) {
+    const digits = p.replace(/\D/g, "");
+    if (digits.length < 10 || digits.length > 13) return null;
+    const start = digits.length - 10, toMask = 10 - visibleDigits();
+    let seen = 0, out = "";
+    for (const c of p) {
+      if (/\d/.test(c)) { out += (seen >= start && seen < start + toMask) ? "X" : c; seen++; }
+      else out += c;
+    }
+    return out;
+  }
+  function findMatches(text) {
+    const found = [];
+    for (const m of text.matchAll(EMAIL_RE)) found.push([m.index, m.index + m[0].length, m[0], maskEmail(m[0])]);
+    for (const m of text.matchAll(PHONE_RE)) {
+      let s = m.index, e = s + m[0].length;
+      if (found.some(([fs, fe]) => s < fe && e > fs)) continue;
+      const raw = m[0], lead = raw.length - raw.replace(/^[ \-.(]+/, "").length;
+      const raw2 = raw.replace(/^[ \-.(]+|[ \-.(]+$/g, "");
+      const masked = maskPhone(raw2);
+      if (masked) { s += lead; found.push([s, s + raw2.length, raw2, masked]); }
+    }
+    return found.sort((a, b) => a[0] - b[0]);
+  }
+  function maskText(text) {
+    let out = "", last = 0;
+    for (const [s, e, , masked] of findMatches(text)) { out += text.slice(last, s) + masked; last = e; }
+    return out + text.slice(last);
+  }
+
+  // ---------------------------------------------------------------- OCR
+  let ocrWorker = null;
+  async function getOcr(progress) {
+    if (ocrWorker) return ocrWorker;
+    progress("OCR tyaar ho reha hai (pehli vaari thoda time lagda hai)...", 0.05);
+    const b64 = await (await fetch(abs("lib/eng-traineddata-gz.b64.txt"))).text();
+    const bin = Uint8Array.from(atob(b64.trim()), (c) => c.charCodeAt(0));
+    ocrWorker = await Tesseract.createWorker([{ code: "eng", data: bin }], 1, {
+      workerPath: abs("lib/tesseract-worker.min.js"),
+      corePath: abs("lib/core/"),
+      cacheMethod: "none",
+      gzip: true,
+      logger: (m) => { if (m.status === "recognizing text" && currentOcrProgress) currentOcrProgress(m.progress); },
+    });
+    return ocrWorker;
+  }
+  let currentOcrProgress = null;
+
+  async function ocrHits(canvas, onProg) {
+    const worker = await getOcr(() => {});
+    currentOcrProgress = onProg;
+    const { data } = await worker.recognize(canvas, {}, { blocks: true, text: false });
+    currentOcrProgress = null;
+    const hits = [];
+    for (const block of data.blocks || []) for (const para of block.paragraphs) for (const line of para.lines) {
+      let text = ""; const spans = [];
+      for (const w of line.words) {
+        const t = w.text.trim(); if (!t) continue;
+        if (text) text += " ";
+        spans.push([text.length, text.length + t.length, w.bbox]);
+        text += t;
+      }
+      for (const [s, e, orig, masked] of findMatches(text)) {
+        let x0 = Infinity, y0 = Infinity, x1 = -1, y1 = -1;
+        for (const [ws, we, b] of spans) {
+          if (we <= s || ws >= e) continue;
+          const n = Math.max(we - ws, 1), cs = Math.max(s, ws) - ws, ce = Math.min(e, we) - ws, w = b.x1 - b.x0;
+          x0 = Math.min(x0, b.x0 + w * cs / n); x1 = Math.max(x1, b.x0 + w * ce / n);
+          y0 = Math.min(y0, b.y0); y1 = Math.max(y1, b.y1);
+        }
+        if (x1 > 0) hits.push({ x0, y0, x1, y1, orig, masked, grow: 0.25, scale: 1.1 });
+      }
+    }
+    return hits;
+  }
+
+  // ---------------------------------------------------------------- painting
+  function paintHits(canvas, hits) {
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    for (const h of hits) {
+      const H = h.y1 - h.y0, g = H * h.grow;
+      const x0 = Math.max(0, Math.floor(h.x0 - g)), y0 = Math.max(0, Math.floor(h.y0 - g));
+      const x1 = Math.min(canvas.width, Math.ceil(h.x1 + g)), y1 = Math.min(canvas.height, Math.ceil(h.y1 + g));
+      const w = x1 - x0, hh = y1 - y0;
+      if (w <= 0 || hh <= 0) continue;
+      // background = median of the pixels just around the box; text = the pixel inside furthest from it
+      const ring = [];
+      const px = (x, y) => { if (x < 0 || y < 0 || x >= canvas.width || y >= canvas.height) return; ring.push(ctx.getImageData(x, y, 1, 1).data); };
+      for (let x = x0; x < x1; x += Math.max(1, (w / 20) | 0)) { px(x, y0 - 2); px(x, y1 + 1); }
+      for (let y = y0; y < y1; y += Math.max(1, (hh / 6) | 0)) { px(x0 - 2, y); px(x1 + 1, y); }
+      const med = (i) => { const v = ring.map((p) => p[i]).sort((a, b) => a - b); return v.length ? v[v.length >> 1] : 255; };
+      const bg = [med(0), med(1), med(2)];
+      const inside = ctx.getImageData(x0, y0, w, hh).data;
+      let best = 0, fg = [0, 0, 0];
+      for (let i = 0; i < inside.length; i += 16) {
+        const d = Math.abs(inside[i] - bg[0]) + Math.abs(inside[i + 1] - bg[1]) + Math.abs(inside[i + 2] - bg[2]);
+        if (d > best) { best = d; fg = [inside[i], inside[i + 1], inside[i + 2]]; }
+      }
+      ctx.fillStyle = `rgb(${bg})`;
+      ctx.fillRect(x0, y0, w, hh);
+      let size = Math.max(8, H * h.scale);
+      const font = (s) => `${s}px Helvetica, Arial, sans-serif`;
+      ctx.font = font(size);
+      while (size > 8 && ctx.measureText(h.masked).width > (h.x1 - h.x0)) { size -= 0.5; ctx.font = font(size); }
+      ctx.fillStyle = `rgb(${fg})`;
+      ctx.textBaseline = "middle";
+      ctx.fillText(h.masked, h.x0, (h.y0 + h.y1) / 2);
+    }
+  }
+
+  // ---------------------------------------------------------------- PDF
+  async function pdfTextHits(page, viewport) {
+    const tc = await page.getTextContent();
+    const items = tc.items.filter((it) => it.str && it.str.length);
+    const total = items.reduce((n, it) => n + it.str.trim().length, 0);
+    if (total < 20) return null; // no real text layer: treat as scanned
+    const mctx = document.createElement("canvas").getContext("2d");
+    const rows = items.map((it) => ({ str: it.str, x: it.transform[4], y: it.transform[5], w: it.width,
+      h: Math.hypot(it.transform[2], it.transform[3]) || it.height || 10,
+      family: (tc.styles[it.fontName] && tc.styles[it.fontName].fontFamily) || "sans-serif" }));
+    rows.sort((a, b) => (b.y - a.y) || (a.x - b.x));
+    const lines = [];
+    for (const r of rows) {
+      const line = lines.find((l) => Math.abs(l.y - r.y) < Math.max(l.h, r.h) * 0.45);
+      if (line) { line.items.push(r); line.h = Math.max(line.h, r.h); } else lines.push({ y: r.y, h: r.h, items: [r] });
+    }
+    const hits = [];
+    for (const line of lines) {
+      line.items.sort((a, b) => a.x - b.x);
+      let text = ""; const pos = []; let prevEnd = null;
+      for (const it of line.items) {
+        if (prevEnd !== null && it.x - prevEnd > it.h * 0.15 && !text.endsWith(" ")) { text += " "; pos.push([prevEnd, it.x, it.y, it.h]); }
+        // real character widths in a matching font, scaled to the item's true width
+        mctx.font = `100px ${it.family}`;
+        const cw = [...it.str].map((c) => mctx.measureText(c).width || 50);
+        const sum = cw.reduce((a, b) => a + b, 0) || 1;
+        let cx = it.x;
+        for (const w of cw) { const ww = it.w * w / sum; pos.push([cx, cx + ww, it.y, it.h]); cx += ww; }
+        text += it.str; prevEnd = it.x + it.w;
+      }
+      for (const [s, e, orig, masked] of findMatches(text)) {
+        const a = pos[s], b = pos[e - 1], hgt = a[3];
+        const r = viewport.convertToViewportRectangle([a[0], a[2] - hgt * 0.22, b[1], a[2] + hgt * 0.78]);
+        hits.push({ x0: Math.min(r[0], r[2]), x1: Math.max(r[0], r[2]), y0: Math.min(r[1], r[3]), y1: Math.max(r[1], r[3]),
+          orig, masked, grow: 0.15, scale: 0.92 });
+      }
+    }
+    return hits;
+  }
+
+  async function maskPdf(buf, progress) {
+    const doc = await pdfjsLib.getDocument({ data: buf, isEvalSupported: false }).promise;
+    const out = []; const changes = []; let usedOcr = false; const SCALE = 3;
+    for (let p = 1; p <= doc.numPages; p++) {
+      const page = await doc.getPage(p);
+      const viewport = page.getViewport({ scale: SCALE });
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.ceil(viewport.width); canvas.height = Math.ceil(viewport.height);
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      const base = (p - 1) / doc.numPages, step = 1 / doc.numPages;
+      progress(`Page ${p}/${doc.numPages} padh reha haan...`, base + step * 0.2);
+      let hits = await pdfTextHits(page, viewport);
+      if (hits === null) {
+        usedOcr = true;
+        progress(`Page ${p}/${doc.numPages}: OCR chal reha hai...`, base + step * 0.3);
+        await getOcr(progress);
+        hits = await ocrHits(canvas, (f) => progress(`Page ${p}/${doc.numPages}: OCR ${Math.round(f * 100)}%`, base + step * (0.3 + 0.6 * f)));
+      }
+      paintHits(canvas, hits);
+      hits.forEach((h) => changes.push([h.orig, h.masked]));
+      const vp1 = page.getViewport({ scale: 1 });
+      out.push({ canvas, w: vp1.width, h: vp1.height });
+    }
+    const { jsPDF } = window.jspdf;
+    let pdf = null;
+    for (const pg of out) {
+      const orient = pg.w > pg.h ? "l" : "p";
+      if (!pdf) pdf = new jsPDF({ unit: "pt", format: [pg.w, pg.h], orientation: orient, compress: true });
+      else pdf.addPage([pg.w, pg.h], orient);
+      pdf.addImage(pg.canvas.toDataURL("image/jpeg", 0.9), "JPEG", 0, 0, pg.w, pg.h, undefined, "FAST");
+    }
+    return { blob: pdf.output("blob"), changes, usedOcr, preview: out[0].canvas, ext: "pdf" };
+  }
+
+  // ---------------------------------------------------------------- Image
+  async function maskImage(file, progress) {
+    const bmp = await createImageBitmap(file);
+    const canvas = document.createElement("canvas");
+    canvas.width = bmp.width; canvas.height = bmp.height;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(bmp, 0, 0);
+    await getOcr(progress);
+    const hits = await ocrHits(canvas, (f) => progress(`OCR ${Math.round(f * 100)}%`, 0.2 + 0.7 * f));
+    paintHits(canvas, hits);
+    const isJpg = /\.(jpe?g)$/i.test(file.name), isWebp = /\.webp$/i.test(file.name);
+    const type = isJpg ? "image/jpeg" : isWebp ? "image/webp" : "image/png";
+    const blob = await new Promise((r) => canvas.toBlob(r, type, 0.95));
+    return { blob, changes: hits.map((h) => [h.orig, h.masked]), usedOcr: true, preview: canvas, ext: isJpg ? "jpg" : isWebp ? "webp" : "png" };
+  }
+
+  // ---------------------------------------------------------------- DOCX
+  const W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+  function maskParagraph(p, changes) {
+    const ts = [...p.getElementsByTagNameNS(W, "t")].filter((t) => {
+      let a = t.parentNode; while (a && !(a.localName === "p" && a.namespaceURI === W)) a = a.parentNode; return a === p;
+    });
+    if (!ts.length) return false;
+    const owner = [], texts = ts.map((t) => t.textContent);
+    texts.forEach((s, i) => { for (let j = 0; j < s.length; j++) owner.push([i, j]); });
+    const matches = findMatches(texts.join(""));
+    if (!matches.length) return false;
+    const pieces = texts.map((s) => [...s]);
+    for (const [s, e, orig, masked] of matches.reverse()) {
+      for (let k = s; k < e; k++) { const [ti, j] = owner[k]; pieces[ti][j] = ""; }
+      const [fi, fj] = owner[s]; pieces[fi][fj] = masked;
+      changes.push([orig, masked]);
+    }
+    ts.forEach((t, i) => { t.textContent = pieces[i].join(""); t.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:space", "preserve"); });
+    return true;
+  }
+  async function maskDocx(buf, progress) {
+    const zip = await JSZip.loadAsync(buf);
+    const changes = [];
+    const names = Object.keys(zip.files).filter((n) => !zip.files[n].dir);
+    let i = 0;
+    for (const name of names) {
+      progress(`Word file padh reha haan...`, 0.1 + 0.8 * (i++ / names.length));
+      if (/^word\/.*\.xml$/.test(name)) {
+        const src = await zip.file(name).async("string");
+        const dom = new DOMParser().parseFromString(src, "application/xml");
+        let changed = false;
+        for (const p of [...dom.getElementsByTagNameNS(W, "p")]) changed = maskParagraph(p, changes) || changed;
+        if (changed) {
+          let xml = new XMLSerializer().serializeToString(dom);
+          if (!xml.startsWith("<?xml")) xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n' + xml;
+          zip.file(name, xml);
+        }
+      } else if (/\.rels$/.test(name) || /^docProps\//.test(name)) {
+        const src = await zip.file(name).async("string");
+        const out = maskText(src.replace(/Target="(mailto|tel):[^"]*"/gi, 'Target="#"'));
+        if (out !== src) zip.file(name, out);
+      }
+    }
+    const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE",
+      mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+    return { blob, changes, usedOcr: false, preview: null, ext: "docx" };
+  }
+
+  // ---------------------------------------------------------------- UI
+  const results = document.getElementById("results");
+  const toast = document.getElementById("toast");
+  const zipBtn = document.getElementById("zipall");
+  const done = [];
+  let downloads = null;
+  (async () => { try { downloads = await window.claude?.use?.("downloads"); } catch { downloads = null; } })();
+
+  const el = (tag, props = {}, ...kids) => { const n = Object.assign(document.createElement(tag), props); kids.forEach((k) => k != null && n.append(k)); return n; };
+  const say = (msg) => { toast.textContent = msg; };
+
+  async function save(filename, blob) {
+    if (!downloads) {
+      if (!window.claude) {
+        // running on its own website: a normal browser download
+        const url = URL.createObjectURL(blob);
+        const a = Object.assign(document.createElement("a"), { href: url, download: filename });
+        document.body.append(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+        say(`${filename} download ho gayi.`);
+        return;
+      }
+      say("Is view vich download nahi ho sakda. Page nu claude.ai vich khol ke try karo."); return;
+    }
+    try {
+      await downloads.save({ filename, data: blob });
+      say(`${filename} download ho gayi.`);
+    } catch (e) {
+      const c = e && e.code;
+      if (c === "declined") say("Download cancel kar ditta gaya.");
+      else if (c === "rate_limited") say("Ikk download pehlan hi khulla hai. Ohnu poora karke dobara dabao.");
+      else say("Download nahi ho saki. Thodi der baad dobara try karo.");
+    }
+  }
+
+  function maskedName(name, ext) { return name.replace(/\.[^.]+$/, "") + "_masked." + ext; }
+
+  async function processFile(file) {
+    const ext = (file.name.split(".").pop() || "").toLowerCase();
+    const bar = el("i");
+    const status = el("div", { className: "status", textContent: "Line vich..." });
+    const chip = el("span", { className: "chip" });
+    const dl = el("button", { className: "primary", type: "button", textContent: "Download", disabled: true });
+    const body = el("div");
+    const card = el("article", { className: "file" },
+      el("div", { className: "file-head" }, el("div", { className: "name" }, file.name, chip), dl),
+      el("div", { className: "bar" }, bar), status, body);
+    results.append(card);
+    const progress = (msg, f) => { status.textContent = msg; if (f != null) bar.style.width = Math.round(Math.min(1, f) * 100) + "%"; };
+    try {
+      let res;
+      const buf = await file.arrayBuffer();
+      if (ext === "pdf") res = await maskPdf(new Uint8Array(buf), progress);
+      else if (ext === "docx") res = await maskDocx(buf, progress);
+      else if (["jpg", "jpeg", "png", "webp", "bmp"].includes(ext)) res = await maskImage(file, progress);
+      else throw new Error("Eh file type nahi chalda. PDF, DOCX, JPG ja PNG pao.");
+      bar.style.width = "100%";
+      bar.parentNode.hidden = true;
+      chip.textContent = res.usedOcr ? "Scanned · OCR" : ext === "docx" ? "Word" : "PDF";
+      const outName = maskedName(file.name, res.ext);
+      if (res.changes.length) {
+        status.textContent = `${res.changes.length} cheezan mask kitian.`;
+        chip.classList.add("ok");
+        body.append(el("div", { className: "changes" }, el("table", {},
+          el("tr", {}, el("th", { textContent: "Pehlan" }), el("th", { textContent: "Hun" })),
+          ...res.changes.map(([o, m]) => el("tr", {}, el("td", { className: "mono", textContent: o }), el("td", { className: "mono masked", textContent: m }))))));
+      } else {
+        status.textContent = "Koi mobile number ja email nahi labhya. Ikk vaari khud check kar lo.";
+        chip.classList.add("warn");
+      }
+      if (res.preview) {
+        const img = el("img", { className: "preview", alt: "Masked resume da pehla page" });
+        img.src = res.preview.toDataURL("image/jpeg", 0.8);
+        body.append(el("details", {}, el("summary", { textContent: "Dekho (masked pehla page)" }), img));
+      }
+      dl.disabled = false;
+      dl.onclick = () => save(outName, res.blob);
+      done.push({ name: outName, blob: res.blob });
+      zipBtn.hidden = done.length < 2;
+    } catch (e) {
+      console.error(e);
+      bar.parentNode.hidden = true;
+      status.className = "status err";
+      status.textContent = "Eh file process nahi ho saki: " + (e && e.message ? e.message : e);
+    }
+  }
+
+  let queue = Promise.resolve();
+  function addFiles(list) { for (const f of list) queue = queue.then(() => processFile(f)); }
+
+  const input = document.getElementById("files"), drop = document.getElementById("drop");
+  input.addEventListener("change", () => { addFiles([...input.files]); input.value = ""; });
+  ["dragenter", "dragover"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave", "drop"].forEach((t) => drop.addEventListener(t, () => drop.classList.remove("over")));
+  drop.addEventListener("drop", (e) => { e.preventDefault(); addFiles([...e.dataTransfer.files]); });
+
+  zipBtn.addEventListener("click", async () => {
+    const zip = new JSZip(); const used = new Set();
+    for (const d of done) { let n = d.name, k = 2; while (used.has(n)) n = d.name.replace(/(\.[^.]+)$/, `_${k++}$1`); used.add(n); zip.file(n, d.blob); }
+    save("masked_resumes.zip", await zip.generateAsync({ type: "blob" }));
+  });
+
+  // sample resume, made on the spot, with made-up details
+  document.getElementById("sample").addEventListener("click", () => {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: "pt", format: "a4" });
+    pdf.setFont("helvetica", "bold"); pdf.setFontSize(22); pdf.text("Aman Gill", 56, 72);
+    pdf.setFont("helvetica", "normal"); pdf.setFontSize(12);
+    [["Accounts Executive", 98], ["Mobile: +91 98140 12345   |   Alt: 7009988776", 124],
+     ["Email: aman.gill.demo@gmail.com", 144], ["Address: Model Town, Ludhiana, Punjab 141002", 164],
+     ["Experience: 2019 - 2024, Tally ERP, GST filing", 196], ["Reference: Mr. Singh, 0161-2401234", 216]]
+      .forEach(([t, y]) => pdf.text(t, 56, y));
+    const blob = pdf.output("blob");
+    addFiles([new File([blob], "sample_resume.pdf", { type: "application/pdf" })]);
+  });
+})();
+</script>
