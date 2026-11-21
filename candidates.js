@@ -78,6 +78,8 @@
     ["S.No", (r, i) => i + 1, 6], ["Name", (r) => r.name, 22], ["Mobile", (r) => r.mobile, 16], ["Email", (r) => r.email, 28],
     ["Post", (r) => r.post, 20], ["City", (r) => r.city, 14], ["Exp (yrs)", (r) => r.experience_years, 9], ["Status", (r) => r.status, 13],
     ["Company", (r) => r.company, 22], ["HR Name", (r) => r.hr_name, 18], ["DOJ", (r) => fmtDate(r.doj), 12],
+    ["Monthly salary", (r) => r.monthly_salary, 14, "num"], ["Annual salary", (r) => r.annual_salary, 14, "num"],
+    ["Bill amount", (r) => r.bill_amount, 13, "num"], ["GST", (r) => r.gst_amount, 11, "num"], ["Total bill", (r) => r.total_bill, 13, "num"],
     ["Added on", (r) => fmtDate(r.created_at), 12], ["Notes", (r) => r.notes, 30],
   ];
   const stamp = () => new Date().toISOString().slice(0, 10);
@@ -99,18 +101,26 @@
     };
     const head = `<row r="1">${REPORT_COLS.map(([h], ci) => cell(ci, 1, h, 1)).join("")}</row>`;
     const body = rows.map((r, i) => `<row r="${i + 2}">${REPORT_COLS.map(([, f], ci) => {
-      let v = f(r, i); if (ci === 6 && v !== null && v !== undefined && v !== "") v = Number(v);
-      return cell(ci, i + 2, v, 0);
+      let v = f(r, i); if ((ci === 6 || REPORT_COLS[ci][3] === "num") && v !== null && v !== undefined && v !== "") v = Number(v);
+      return cell(ci, i + 2, v, REPORT_COLS[ci][3] === "num" ? 2 : 0);
     }).join("")}</row>`).join("");
+    // totals row for the money columns
+    const tr = rows.length + 2;
+    const totals = `<row r="${tr}">${REPORT_COLS.map(([h, , , kind], ci) => {
+      const ref = colName(ci) + tr;
+      if (ci === 1) return `<c r="${ref}" t="inlineStr" s="3"><is><t>Total</t></is></c>`;
+      if (kind === "num") return `<c r="${ref}" s="4"><f>SUM(${colName(ci)}2:${colName(ci)}${tr - 1})</f></c>`;
+      return `<c r="${ref}" s="3"/>`;
+    }).join("")}</row>`;
     const last = colName(REPORT_COLS.length - 1) + (rows.length + 1);
     const sheet = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${REPORT_COLS.map(([, , w], i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join("")}</cols><sheetData>${head}${body}</sheetData><autoFilter ref="A1:${last}"/></worksheet>`;
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${REPORT_COLS.map(([, , w], i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join("")}</cols><sheetData>${head}${body}${totals}</sheetData><autoFilter ref="A1:${last}"/></worksheet>`;
     const zip = new JSZip();
     zip.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`);
     zip.file("_rels/.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`);
     zip.file("xl/workbook.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Candidate Tracker" sheetId="1" r:id="rId1"/></sheets><definedNames><definedName name="_xlnm._FilterDatabase" localSheetId="0" hidden="1">'Candidate Tracker'!$A$1:$${last.replace(/(\d+)$/, "$$$1")}</definedName></definedNames></workbook>`);
     zip.file("xl/_rels/workbook.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`);
-    zip.file("xl/styles.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF0F2A4A"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/></cellXfs></styleSheet>`);
+    zip.file("xl/styles.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="[$₹-4009]#,##,##0.00"/></numFmts><fonts count="3"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF0F2A4A"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="5"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="164" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1" applyNumberFormat="1"/></cellXfs></styleSheet>`);
     zip.file("xl/worksheets/sheet1.xml", sheet);
     const blob = await zip.generateAsync({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     await saveFile(`Candidate_Tracker_${stamp()}.xlsx`, blob);
@@ -127,15 +137,21 @@
     pdf.text("Candidate Tracker", 36, 40);
     pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.setTextColor(90, 100, 115);
     pdf.text(`Awasthi HR Associates  ·  ${filterLabel()}  ·  ${rows.length} candidate${rows.length === 1 ? "" : "s"}  ·  Generated ${fmtDate(new Date().toISOString())}`, 36, 56);
-    const cols = REPORT_COLS.filter(([h]) => h !== "Notes" && h !== "Added on");
+    const keep = ["S.No", "Name", "Mobile", "Post", "City", "Status", "Company", "DOJ", "Monthly salary", "Annual salary", "Bill amount", "GST", "Total bill"];
+    const cols = REPORT_COLS.filter(([h]) => keep.includes(h));
+    const rs = (n) => (n === null || n === undefined || n === "") ? "" : "Rs " + Number(n).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+    const sum = (k) => rows.reduce((t, r) => t + (Number(r[k]) || 0), 0);
     pdf.autoTable({
       startY: 68, margin: { left: 36, right: 36, bottom: 40 },
       head: [cols.map(([h]) => h)],
-      body: rows.map((r, i) => cols.map(([, f]) => { const v = f(r, i); return v === null || v === undefined ? "" : String(v); })),
+      body: rows.map((r, i) => cols.map(([, f, , kind]) => { const v = f(r, i); return kind === "num" ? rs(v) : (v === null || v === undefined ? "" : String(v)); })),
+      foot: [cols.map(([h, , , kind], i) => i === 1 ? "Total" : kind === "num" ? rs(sum({ "Monthly salary": "monthly_salary", "Annual salary": "annual_salary", "Bill amount": "bill_amount", "GST": "gst_amount", "Total bill": "total_bill" }[h])) : "")],
+      footStyles: { fillColor: [228, 244, 236], textColor: [24, 121, 78], fontStyle: "bold" },
+      showFoot: "lastPage",
       styles: { font: "helvetica", fontSize: 8, cellPadding: 4, overflow: "linebreak", valign: "top" },
       headStyles: { fillColor: [15, 42, 74], textColor: 255, fontStyle: "bold" },
       alternateRowStyles: { fillColor: [244, 246, 249] },
-      columnStyles: { 0: { cellWidth: 26 }, 3: { cellWidth: 120 } },
+      columnStyles: Object.fromEntries([[0, { cellWidth: 26 }], ...cols.map(([, , , kind], i) => [i, kind === "num" ? { halign: "right" } : {}]).filter(([i]) => i !== 0)]),
       didDrawPage: () => {
         const n = pdf.internal.getNumberOfPages();
         pdf.setFontSize(8); pdf.setTextColor(120);
@@ -169,6 +185,7 @@
       const status = td(""); const chip = document.createElement("span");
       chip.className = "chip st-" + r.status.toLowerCase().replace(/\s+/g, "-"); chip.textContent = r.status; status.append(chip);
       if (r.doj) status.append(Object.assign(document.createElement("span"), { className: "doj", textContent: "DOJ " + fmtDate(r.doj) }));
+      if (r.total_bill) status.append(Object.assign(document.createElement("span"), { className: "bill", textContent: "Bill " + money(r.total_bill) }));
       const act = td("");
       const edit = Object.assign(document.createElement("button"), { type: "button", className: "ghost small icon", textContent: "✎", title: "Edit", ariaLabel: "Edit " + r.name });
       edit.onclick = () => startEdit(r);
@@ -190,17 +207,35 @@
   $("c-filter").addEventListener("change", load);
 
   // ------------------------------------------------------------ add / edit
-  const fields = ["name", "mobile", "email", "post", "skills", "city", "experience_years", "status", "doj", "company", "hr_name", "resume_file", "notes"];
+  const fields = ["name", "mobile", "email", "post", "skills", "city", "experience_years", "status", "doj", "monthly_salary", "annual_salary", "bill_amount", "gst_amount", "total_bill", "company", "hr_name", "resume_file", "notes"];
   // DOJ only matters once a candidate is selected
   const toggleJoined = () => { document.querySelectorAll(".joined").forEach((el) => { el.hidden = $("f-status").value !== "Selected"; }); };
   $("f-status").addEventListener("change", toggleJoined);
+
+  // billing: annual = monthly x 12, bill = fee% of annual, GST = gst% of bill, total = bill + GST
+  const FEE = Number(cfg.feePercent ?? 7.5), GST = Number(cfg.gstPercent ?? 18);
+  document.querySelectorAll(".fee-pct").forEach((e) => { e.textContent = FEE; });
+  document.querySelectorAll(".gst-pct").forEach((e) => { e.textContent = GST; });
+  const r2 = (n) => Math.round(n * 100) / 100;
+  const money = (n) => (n === null || n === undefined || n === "") ? "" : "₹" + Number(n).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+  function calcBill(monthly) {
+    const m = Number(monthly);
+    if (monthly === "" || monthly === null || monthly === undefined || !(m >= 0)) return { annual_salary: null, bill_amount: null, gst_amount: null, total_bill: null };
+    const annual = r2(m * 12), bill = r2(annual * FEE / 100), gst = r2(bill * GST / 100);
+    return { annual_salary: annual, bill_amount: bill, gst_amount: gst, total_bill: r2(bill + gst) };
+  }
+  function recalc() {
+    const c = calcBill($("f-monthly_salary").value.trim());
+    for (const k of Object.keys(c)) $("f-" + k).value = c[k] === null ? "" : money(c[k]);
+  }
+  $("f-monthly_salary").addEventListener("input", recalc);
   // the mobile/email columns come from supabase/002_add_mobile_email.sql
-  const columnHint = (err) => /mobile|email|company|hr_name|doj/i.test(err && err.message || "") && /column|schema/i.test(err.message)
-    ? "Some columns are missing in Supabase. Run the SQL files in the supabase folder (002, 003 and 004) once." : "";
+  const columnHint = (err) => /mobile|email|company|hr_name|doj|salary|bill|gst/i.test(err && err.message || "") && /column|schema/i.test(err.message)
+    ? "Some columns are missing in Supabase. Run the SQL files in the supabase folder (002 to 005) once." : "";
   function startEdit(r) {
     editingId = r.id;
     fields.forEach((f) => { $("f-" + f).value = r[f] == null ? "" : r[f]; });
-    toggleJoined();
+    toggleJoined(); recalc();
     syncPost();
     $("c-save").textContent = "Save changes";
     $("c-cancel").hidden = false;
@@ -217,6 +252,9 @@
     const rec = {};
     fields.forEach((f) => { const v = $("f-" + f).value.trim(); rec[f] = v === "" ? null : v; });
     if (rec.experience_years != null) rec.experience_years = Number(rec.experience_years);
+    // money: work it out again from the monthly salary (the boxes show formatted ₹ text)
+    rec.monthly_salary = rec.monthly_salary === null ? null : Number(rec.monthly_salary);
+    Object.assign(rec, calcBill(rec.monthly_salary === null ? "" : rec.monthly_salary));
     if (!rec.name) { msg("Candidate name is required.", true); return; }
     $("c-save").disabled = true;
     const res = editingId

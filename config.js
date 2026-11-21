@@ -10,4 +10,7 @@ window.AWASTHI_CONFIG = {
   emailSignature: "Ashish Awasthi\nAwasthi HR Associates",
   // red line printed at the bottom of every page of a masked resume ("" switches it off)
   footerText: "Reference by Awasthi HR Associates (Ashish Awasthi)",
+  // billing for selected candidates: fee on annual salary, then GST on the fee
+  feePercent: 7.5,
+  gstPercent: 18,
 };

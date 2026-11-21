@@ -45,3 +45,10 @@ alter table public.candidates add column if not exists hr_name text check (char_
 
 -- date of joining for selected candidates (same as 004_add_doj.sql)
 alter table public.candidates add column if not exists doj date;
+
+-- salary and billing for selected candidates (same as 005_add_billing.sql)
+alter table public.candidates add column if not exists monthly_salary numeric(12,2) check (monthly_salary >= 0);
+alter table public.candidates add column if not exists annual_salary  numeric(14,2) check (annual_salary >= 0);
+alter table public.candidates add column if not exists bill_amount    numeric(14,2) check (bill_amount >= 0);
+alter table public.candidates add column if not exists gst_amount     numeric(14,2) check (gst_amount >= 0);
+alter table public.candidates add column if not exists total_bill     numeric(14,2) check (total_bill >= 0);

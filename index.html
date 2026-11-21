@@ -139,6 +139,10 @@
   .report-btns { display: inline-flex; gap: 6px; margin-left: auto; }
   .report-btns button { margin-right: 0; }
   .doj { display: block; font-size: 11px; color: var(--muted); margin-top: 3px; white-space: nowrap; }
+  .billing { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; padding: 12px; border: 1px dashed var(--line); border-radius: 8px; background: var(--bg); }
+  .billing .field input[readonly] { background: var(--surface); color: var(--fg); font-variant-numeric: tabular-nums; border-style: dashed; }
+  .billing .total input[readonly] { font-weight: 700; color: var(--ok); border-style: solid; border-color: var(--ok); }
+  .bill { display: block; font-size: 11px; color: var(--ok); font-weight: 600; margin-top: 2px; white-space: nowrap; }
   button.danger { color: var(--err); }
   .chip.st-shortlisted, .chip.st-selected { background: var(--ok-soft); color: var(--ok); }
   .chip.st-sent-to-client { background: var(--warn-soft); color: var(--warn); }
@@ -328,6 +332,13 @@
           </select>
         </label>
         <label class="field joined" hidden>Date of joining (DOJ)<input id="f-doj" type="date"></label>
+        <div class="full joined billing" hidden>
+          <label class="field">Monthly salary (₹)<input id="f-monthly_salary" type="number" min="0" step="1" inputmode="numeric" placeholder="e.g. 25000"></label>
+          <label class="field">Annual salary (₹)<input id="f-annual_salary" readonly tabindex="-1"></label>
+          <label class="field"><span>Bill amount (<span class="fee-pct">7.5</span>%)</span><input id="f-bill_amount" readonly tabindex="-1"></label>
+          <label class="field"><span>GST (<span class="gst-pct">18</span>%)</span><input id="f-gst_amount" readonly tabindex="-1"></label>
+          <label class="field total">Total bill amount (₹)<input id="f-total_bill" readonly tabindex="-1"></label>
+        </div>
         <label class="field">Company (sent to)<input id="f-company" maxlength="200" autocomplete="off" placeholder="e.g. Flipkart Minutes, Mohali"></label>
         <label class="field">HR name<input id="f-hr_name" maxlength="200" autocomplete="off" placeholder="e.g. Ms. Neha Sharma"></label>
         <label class="field">Masked resume file<input id="f-resume_file" maxlength="300" placeholder="Filled in automatically"></label>
