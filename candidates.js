@@ -118,6 +118,7 @@
   function startEdit(r) {
     editingId = r.id;
     fields.forEach((f) => { $("f-" + f).value = r[f] == null ? "" : r[f]; });
+    syncPost();
     $("c-save").textContent = "Save changes";
     $("c-cancel").hidden = false;
     form.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -149,6 +150,15 @@
   // the email / WhatsApp buttons read the form, so the team's corrections are used
   window.AwasthiCurrentDetails = () => Object.fromEntries(["name", "mobile", "email", "post", "city", "experience_years", "skills", "resume_file"].map((f) => [f, $("f-" + f).value.trim()]));
 
+  // Skills shows the designation: keep it in step when the team edits the post
+  let lastPost = "";
+  $("f-post").addEventListener("input", () => {
+    const sk = $("f-skills");
+    if (!sk.value.trim() || sk.value.trim() === lastPost) sk.value = $("f-post").value.trim();
+    lastPost = $("f-post").value.trim();
+  });
+  const syncPost = () => { lastPost = $("f-post").value.trim(); };
+
   function prefill(d, scroll) {
     if (!user || !d) return;
     // this resume is already in the form (maybe corrected by hand): keep it
@@ -157,6 +167,7 @@
     resetForm();
     ["name", "mobile", "email", "post", "city", "skills", "resume_file"].forEach((f) => { if (d[f]) $("f-" + f).value = d[f]; });
     if (d.experience_years != null) $("f-experience_years").value = d.experience_years;
+    syncPost();
     msg(`Details for ${d.name || "the candidate"} were filled in from the resume. Check them, then press "Add candidate".`);
     if (scroll) { form.scrollIntoView({ behavior: "smooth", block: "start" }); $("f-name").focus(); }
   }

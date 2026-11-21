@@ -98,8 +98,9 @@
       if (fileWords.some((w) => l.toLowerCase().split(/\s+/).includes(w))) return titleCase(l);
       if (!fromText && l.split(/\s+/).length >= 2) fromText = titleCase(l);
     }
-    // the person who saved the file named it: trust a real-looking file name over a guess from the text
-    return fromFile || fromText;
+    // a two-word file name like "Amritpal_Singh" was typed by a person: trust it over a guess from the text
+    if (fromFile.split(" ").length >= 2) return fromFile;
+    return fromText || fromFile;
   }
 
   function findCity(lines, fileName) {

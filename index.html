@@ -821,7 +821,7 @@
     if (post) lines.push(`- Designation: ${post}`);
     if (city) lines.push(`- Location: ${city}`);
     if (hasExp) lines.push(`- Total experience: ${exp} year${Number(exp) === 1 ? "" : "s"}`);
-    if (d.skills) lines.push(`- Key skills: ${d.skills}`);
+    if (d.skills && d.skills.trim().toLowerCase() !== post.trim().toLowerCase()) lines.push(`- Key skills: ${d.skills}`);
     lines.push(`- Attachment: ${name}`, "",
       "Kindly review the profile and share your feedback, or let us know a convenient time for an interview.",
       "", "Thanks & Regards,", (window.AWASTHI_CONFIG && window.AWASTHI_CONFIG.emailSignature) || "Awasthi Resume");
@@ -892,6 +892,7 @@
       details.email = origs.find((o) => o.includes("@")) || "";
       details.mobile = origs.find((o) => !o.includes("@")) || "";
       details.resume_file = outName;
+      details.skills = details.post || ""; // the team wants only the designation in Skills
       const prefill = () => document.dispatchEvent(new CustomEvent("resume-prefill", { detail: { details, scroll: false } }));
       dl.onclick = () => { save(outName, res.blob); prefill(); };
       wa.disabled = false;
