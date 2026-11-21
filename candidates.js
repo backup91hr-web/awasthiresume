@@ -77,7 +77,7 @@
   const REPORT_COLS = [
     ["S.No", (r, i) => i + 1, 6], ["Name", (r) => r.name, 22], ["Mobile", (r) => r.mobile, 16], ["Email", (r) => r.email, 28],
     ["Post", (r) => r.post, 20], ["City", (r) => r.city, 14], ["Exp (yrs)", (r) => r.experience_years, 9], ["Status", (r) => r.status, 13],
-    ["Company", (r) => r.company, 22], ["HR Name", (r) => r.hr_name, 18], ["DOJ", (r) => fmtDate(r.doj), 12], ["PAN", (r) => r.pan, 12],
+    ["Company", (r) => r.company, 22], ["HR Name", (r) => r.hr_name, 18], ["DOJ", (r) => fmtDate(r.doj), 12],
     ["Added on", (r) => fmtDate(r.created_at), 12], ["Notes", (r) => r.notes, 30],
   ];
   const stamp = () => new Date().toISOString().slice(0, 10);
@@ -190,12 +190,12 @@
   $("c-filter").addEventListener("change", load);
 
   // ------------------------------------------------------------ add / edit
-  const fields = ["name", "mobile", "email", "post", "skills", "city", "experience_years", "status", "doj", "pan", "company", "hr_name", "resume_file", "notes"];
-  // DOJ and PAN only matter once a candidate is selected
+  const fields = ["name", "mobile", "email", "post", "skills", "city", "experience_years", "status", "doj", "company", "hr_name", "resume_file", "notes"];
+  // DOJ only matters once a candidate is selected
   const toggleJoined = () => { document.querySelectorAll(".joined").forEach((el) => { el.hidden = $("f-status").value !== "Selected"; }); };
   $("f-status").addEventListener("change", toggleJoined);
   // the mobile/email columns come from supabase/002_add_mobile_email.sql
-  const columnHint = (err) => /mobile|email|company|hr_name|doj|pan/i.test(err && err.message || "") && /column|schema/i.test(err.message)
+  const columnHint = (err) => /mobile|email|company|hr_name|doj/i.test(err && err.message || "") && /column|schema/i.test(err.message)
     ? "Some columns are missing in Supabase. Run the SQL files in the supabase folder (002, 003 and 004) once." : "";
   function startEdit(r) {
     editingId = r.id;
@@ -217,10 +217,6 @@
     const rec = {};
     fields.forEach((f) => { const v = $("f-" + f).value.trim(); rec[f] = v === "" ? null : v; });
     if (rec.experience_years != null) rec.experience_years = Number(rec.experience_years);
-    if (rec.pan) {
-      rec.pan = rec.pan.toUpperCase().replace(/\s+/g, "");
-      if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(rec.pan)) { msg("PAN number should look like ABCDE1234F (5 letters, 4 digits, 1 letter).", true); return; }
-    }
     if (!rec.name) { msg("Candidate name is required.", true); return; }
     $("c-save").disabled = true;
     const res = editingId
