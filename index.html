@@ -143,6 +143,10 @@
   .billing .field input[readonly] { background: var(--surface); color: var(--fg); font-variant-numeric: tabular-nums; border-style: dashed; }
   .billing .total input[readonly] { font-weight: 700; color: var(--ok); border-style: solid; border-color: var(--ok); }
   .bill { display: block; font-size: 11px; color: var(--ok); font-weight: 600; margin-top: 2px; white-space: nowrap; }
+  .late { display: block; font-size: 11px; color: var(--err); font-weight: 600; margin-top: 2px; white-space: nowrap; }
+  .billing .delay-box.is-late input[readonly] { color: var(--err); border-color: var(--err); border-style: solid; font-weight: 700; }
+  .report-btns { flex-wrap: wrap; }
+  button.pay { color: var(--warn); }
   button.danger { color: var(--err); }
   .chip.st-shortlisted, .chip.st-selected { background: var(--ok-soft); color: var(--ok); }
   .chip.st-sent-to-client { background: var(--warn-soft); color: var(--warn); }
@@ -338,6 +342,10 @@
           <label class="field"><span>Bill amount (<span class="fee-pct">7.5</span>%)</span><input id="f-bill_amount" readonly tabindex="-1"></label>
           <label class="field"><span>GST (<span class="gst-pct">18</span>%)</span><input id="f-gst_amount" readonly tabindex="-1"></label>
           <label class="field total">Total bill amount (₹)<input id="f-total_bill" readonly tabindex="-1"></label>
+          <label class="field">Bill number<input id="f-bill_no" maxlength="50" autocomplete="off" placeholder="e.g. AHR/2026/045"></label>
+          <label class="field"><span>Payment due (DOJ + <span class="pay-days">60</span> days)</span><input id="f-due_date" readonly tabindex="-1"></label>
+          <label class="field">Payment received on<input id="f-payment_date" type="date"></label>
+          <label class="field delay-box">Payment delay<input id="f-delay" readonly tabindex="-1"></label>
         </div>
         <label class="field">Company (sent to)<input id="f-company" maxlength="200" autocomplete="off" placeholder="e.g. Flipkart Minutes, Mohali"></label>
         <label class="field">HR name<input id="f-hr_name" maxlength="200" autocomplete="off" placeholder="e.g. Ms. Neha Sharma"></label>
@@ -359,6 +367,8 @@
         <span class="report-btns">
           <button class="ghost small" id="r-xlsx" type="button" title="Download the list shown below as an Excel file">⬇ Excel report</button>
           <button class="ghost small" id="r-pdf" type="button" title="Download the list shown below as a PDF">⬇ PDF report</button>
+          <button class="ghost small pay" id="p-xlsx" type="button" title="Bill-wise payment and delay report (Excel)">⬇ Payment report Excel</button>
+          <button class="ghost small pay" id="p-pdf" type="button" title="Bill-wise payment and delay report (PDF)">⬇ Payment report PDF</button>
         </span>
       </div>
       <div class="ctable">
@@ -519,7 +529,7 @@
 
   // ---------------------------------------------------------------- footer on every page
   const FOOTER_TEXT = () => (window.AWASTHI_CONFIG && window.AWASTHI_CONFIG.footerText !== undefined)
-    ? window.AWASTHI_CONFIG.footerText : "Reference by Awasthi HR Associates (Ashish Awasthi)";
+    ? window.AWASTHI_CONFIG.footerText : "Referred by Awasthi HR Associates (Ashish Awasthi)";
   function drawFooter(canvas) {
     const text = FOOTER_TEXT(); if (!text) return;
     const ctx = canvas.getContext("2d");

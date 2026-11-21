@@ -52,3 +52,8 @@ alter table public.candidates add column if not exists annual_salary  numeric(14
 alter table public.candidates add column if not exists bill_amount    numeric(14,2) check (bill_amount >= 0);
 alter table public.candidates add column if not exists gst_amount     numeric(14,2) check (gst_amount >= 0);
 alter table public.candidates add column if not exists total_bill     numeric(14,2) check (total_bill >= 0);
+
+-- bill number and payment date (same as 006_add_payment.sql)
+alter table public.candidates add column if not exists bill_no      text check (char_length(bill_no) <= 50);
+alter table public.candidates add column if not exists payment_date date;
+create index if not exists candidates_bill_no_idx on public.candidates (bill_no);
