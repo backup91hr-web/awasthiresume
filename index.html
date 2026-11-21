@@ -52,8 +52,8 @@
     --warn: #f0b75a; --warn-soft: #3a2c14; --err: #ff8a7d; --mask: #b9d3ff; color-scheme: dark;
   }
   body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
-  .wrap { max-width: 1400px; margin: 0 auto; padding-block: 28px 56px; grid-template-columns: minmax(0, 1fr);
-    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  .wrap { max-width: none; margin: 0; padding-block: 20px 40px; grid-template-columns: minmax(0, 1fr);
+    padding-left: max(clamp(16px, 2.2vw, 40px), env(safe-area-inset-left, 0px)); padding-right: max(clamp(16px, 2.2vw, 40px), env(safe-area-inset-right, 0px));
     display: grid; gap: 20px; }
   h1 { font-family: var(--font-display); font-size: 30px; line-height: 1.15; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
   .lede { margin: 6px 0 0; color: var(--muted); max-width: 62ch; }
@@ -189,6 +189,12 @@
     background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); }
   .install-btn.on-dark { background: var(--brand-mark); color: var(--brand-bg); border-color: var(--brand-mark); }
   @media (display-mode: standalone) { .install-btn { display: none !important; } }
+  @media (min-width: 1500px) {
+    #app { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); grid-template-rows: auto auto auto auto auto 1fr; align-items: start; column-gap: 24px; }
+    #app > .app-bar, #app > .note, #app > footer { grid-column: 1 / -1; }
+    #app > header, #app > .example, #app > section.panel:not(#candidates), #app > #results { grid-column: 1; }
+    #app > #candidates { grid-column: 2; grid-row: 2 / span 5; }
+  }
   @media (max-width: 820px) {
     .login-screen { grid-template-columns: 1fr; }
     .brand-side { padding-block: 28px; padding-right: max(20px, env(safe-area-inset-right, 0px)); padding-left: max(20px, env(safe-area-inset-left, 0px)); gap: 22px; }
