@@ -100,9 +100,9 @@
         if (error) msg("Delete nahi hoya: " + error.message, true); else { msg(`${r.name} hata ditta.`); load(); }
       };
       act.append(edit, del);
-      tr.append(td(r.name, "strong"), td(r.mobile, "mono"), td(r.email, "mono small"), td(r.post), td(r.skills, "wrap"), td(r.city),
-        td(r.experience_years != null ? r.experience_years + " saal" : ""), status, td(r.resume_file, "mono small"),
-        td(new Date(r.created_at).toLocaleDateString("en-IN")), act);
+      tr.append(td(r.name, "strong"), td(r.mobile, "mono"), Object.assign(td(r.email, "mono small"), { title: r.email || "" }), td(r.post, "cell-wrap"), td(r.skills, "cell-wrap"), td(r.city),
+        td(r.experience_years != null ? r.experience_years + " saal" : ""), status, Object.assign(td(r.resume_file, "mono small"), { title: r.resume_file || "" }),
+        td(new Date(r.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "2-digit" })), act);
       return tr;
     }));
     $("c-empty").hidden = rows.length > 0;
