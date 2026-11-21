@@ -206,6 +206,11 @@
     background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); }
   .install-btn.on-dark { background: var(--brand-mark); color: var(--brand-bg); border-color: var(--brand-mark); }
   @media (display-mode: standalone) { .install-btn { display: none !important; } }
+  .install-help { border: 0; border-radius: 14px; padding: 22px; max-width: min(420px, calc(100vw - 32px)); background: var(--surface); color: var(--fg); box-shadow: 0 20px 50px rgba(0,0,0,.3); }
+  .install-help::backdrop { background: rgba(15, 42, 74, .55); }
+  .install-help h2 { font-family: var(--font-display); font-size: 20px; margin: 0 0 12px; }
+  .install-help ol { margin: 0 0 18px; padding-left: 20px; display: grid; gap: 8px; line-height: 1.45; }
+  .install-help .primary { width: 100%; }
   @media (min-width: 1500px) {
     #app { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); grid-template-rows: auto auto auto auto auto 1fr; align-items: start; column-gap: 24px; }
     #app > .app-bar, #app > .note, #app > footer { grid-column: 1 / -1; }
@@ -228,7 +233,7 @@
 <main class="login-screen" id="login-screen" hidden>
   <section class="brand-side">
     <div class="brand-top"><div class="brand"><svg class="brand-logo" viewBox="0 0 44 44" aria-hidden="true"><rect x="7" y="3" width="30" height="38" rx="4" fill="#ffffff"/><rect x="12" y="10" width="14" height="3" rx="1.5" fill="#9fb3cc"/><rect x="12" y="17" width="20" height="2.5" rx="1.25" fill="#d6dee9"/><rect x="11" y="23" width="22" height="6" rx="1.5" fill="#f2b33d"/><rect x="12" y="33" width="16" height="2.5" rx="1.25" fill="#d6dee9"/></svg><div class="brand-name">Awasthi Resume<small>Resume Mask Software</small></div></div>
-      <button class="install-btn on-dark" type="button" hidden>⬇ Install app</button>
+      <button class="install-btn on-dark" type="button">⬇ Install app</button>
     </div>
     <div class="brand-pitch">
       <h2>Share resumes, <mark>hide contacts</mark>.</h2>
@@ -267,10 +272,16 @@
   </section>
 </main>
 
+<dialog id="install-help" class="install-help" aria-labelledby="install-help-title">
+  <h2 id="install-help-title">Install the app</h2>
+  <ol></ol>
+  <button class="primary" id="install-close" type="button">OK</button>
+</dialog>
+
 <div class="wrap" id="app" hidden>
   <div class="app-bar">
     <div class="brand"><svg class="brand-logo" style="width:34px;height:34px" viewBox="0 0 44 44" aria-hidden="true"><rect x="7" y="3" width="30" height="38" rx="4" fill="#ffffff"/><rect x="12" y="10" width="14" height="3" rx="1.5" fill="#9fb3cc"/><rect x="12" y="17" width="20" height="2.5" rx="1.25" fill="#d6dee9"/><rect x="11" y="23" width="22" height="6" rx="1.5" fill="#f2b33d"/><rect x="12" y="33" width="16" height="2.5" rx="1.25" fill="#d6dee9"/></svg><div class="brand-name">Awasthi Resume<small>Resume Mask Software</small></div></div>
-    <button class="install-btn" type="button" hidden>⬇ Install app</button>
+    <button class="install-btn" type="button">⬇ Install app</button>
     <div class="who" id="who-box" hidden><span>Login: <strong id="c-who"></strong></span><button class="ghost small" id="c-logout" type="button">Logout</button></div>
   </div>
   <header>
@@ -977,14 +988,52 @@
   (() => {
     let deferred = null;
     const btns = () => document.querySelectorAll(".install-btn");
-    window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferred = e; btns().forEach((b) => { b.hidden = false; }); });
+    const standalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+    if (standalone()) btns().forEach((b) => { b.hidden = true; });
+    window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferred = e; });
     window.addEventListener("appinstalled", () => { deferred = null; btns().forEach((b) => { b.hidden = true; }); });
+    // steps for phones/browsers that do not offer the one-tap install
+    function installHelp() {
+      const ua = navigator.userAgent;
+      const ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      const android = /Android/.test(ua);
+      const inApp = /FBAN|FBAV|Instagram|WhatsApp|Line\/|; wv\)/.test(ua);
+      let title, steps;
+      if (inApp) {
+        title = "Open this page in Chrome or Safari first";
+        steps = ["Apps cannot be installed from inside WhatsApp, Instagram or Facebook.",
+          android ? "Tap ⋮ (top right) and choose \"Open in Chrome\"." : "Tap the share or ⋯ button and choose \"Open in Safari\".",
+          "Then tap \"Install app\" again."];
+      } else if (ios && /CriOS|EdgiOS|FxiOS/.test(ua)) {
+        title = "Install on iPhone";
+        steps = ["Tap the Share button (□↑) in the address bar.", "Scroll down and tap \"Add to Home Screen\".", "Tap \"Add\". Awasthi Resume appears on your home screen."];
+      } else if (ios) {
+        title = "Install on iPhone (Safari)";
+        steps = ["Tap the Share button (□↑) at the bottom of Safari.", "Scroll down and tap \"Add to Home Screen\".", "Tap \"Add\". Awasthi Resume appears on your home screen."];
+      } else if (android && /SamsungBrowser/.test(ua)) {
+        title = "Install on Android (Samsung Internet)";
+        steps = ["Tap the menu ☰ at the bottom right.", "Tap \"Add page to\" and then \"Home screen\".", "Tap \"Add\"."];
+      } else if (android) {
+        title = "Install on Android (Chrome)";
+        steps = ["Tap ⋮ at the top right of Chrome.", "Tap \"Install app\" (or \"Add to Home screen\").", "Tap \"Install\". Awasthi Resume appears with your other apps.",
+          "If you do not see it, refresh the page once and try again."];
+      } else {
+        title = "Install on this computer";
+        steps = ["In Chrome or Edge, click the install icon (⊕) at the right end of the address bar.", "Or open the ⋮ menu and choose \"Cast, save and share\" then \"Install page as app\".", "Click \"Install\"."];
+      }
+      const d = document.getElementById("install-help");
+      d.querySelector("h2").textContent = title;
+      d.querySelector("ol").replaceChildren(...steps.map((t) => Object.assign(document.createElement("li"), { textContent: t })));
+      if (d.showModal) d.showModal(); else d.setAttribute("open", "");
+    }
     document.addEventListener("click", async (e) => {
-      const b = e.target.closest(".install-btn"); if (!b || !deferred) return;
+      const b = e.target.closest(".install-btn"); if (!b) return;
+      if (!deferred) { installHelp(); return; }
       deferred.prompt();
       try { await deferred.userChoice; } catch (err) { /* ignore */ }
-      deferred = null; btns().forEach((x) => { x.hidden = true; });
+      deferred = null;
     });
+    document.getElementById("install-close").addEventListener("click", () => { const d = document.getElementById("install-help"); d.close ? d.close() : d.removeAttribute("open"); });
   })();
 </script>
 <script src="extract.js"></script>
