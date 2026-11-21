@@ -38,3 +38,7 @@ create policy "team can delete" on public.candidates for delete to authenticated
 alter table public.candidates add column if not exists mobile text check (char_length(mobile) <= 30);
 alter table public.candidates add column if not exists email  text check (char_length(email) <= 200);
 create index if not exists candidates_mobile_idx on public.candidates (mobile);
+
+-- client company and HR name (same as 003_add_company_hr.sql)
+alter table public.candidates add column if not exists company text check (char_length(company) <= 200);
+alter table public.candidates add column if not exists hr_name text check (char_length(hr_name) <= 200);

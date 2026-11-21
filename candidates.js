@@ -76,7 +76,7 @@
     const q = $("c-search").value.trim().replace(/[%,()]/g, " ");
     const st = $("c-filter").value;
     let req = sb.from("candidates").select("*").order("created_at", { ascending: false }).limit(500);
-    if (q) req = req.or(["name", "mobile", "email", "skills", "city", "post"].map((c) => `${c}.ilike.%${q}%`).join(","));
+    if (q) req = req.or(["name", "mobile", "email", "skills", "city", "post", "company", "hr_name"].map((c) => `${c}.ilike.%${q}%`).join(","));
     if (st) req = req.eq("status", st);
     const { data, error } = await req;
     if (error) { msg(columnHint(error) || "Could not load the list: " + error.message, true); return; }
@@ -91,17 +91,17 @@
       const status = td(""); const chip = document.createElement("span");
       chip.className = "chip st-" + r.status.toLowerCase().replace(/\s+/g, "-"); chip.textContent = r.status; status.append(chip);
       const act = td("");
-      const edit = Object.assign(document.createElement("button"), { type: "button", className: "ghost small", textContent: "Edit" });
+      const edit = Object.assign(document.createElement("button"), { type: "button", className: "ghost small icon", textContent: "✎", title: "Edit", ariaLabel: "Edit " + r.name });
       edit.onclick = () => startEdit(r);
-      const del = Object.assign(document.createElement("button"), { type: "button", className: "ghost small danger", textContent: "Delete" });
+      const del = Object.assign(document.createElement("button"), { type: "button", className: "ghost small danger icon", textContent: "🗑", title: "Delete", ariaLabel: "Delete " + r.name });
       del.onclick = async () => {
-        if (del.dataset.armed !== "1") { del.dataset.armed = "1"; del.textContent = "Sure?"; setTimeout(() => { del.dataset.armed = ""; del.textContent = "Delete"; }, 4000); return; }
+        if (del.dataset.armed !== "1") { del.dataset.armed = "1"; del.textContent = "Sure?"; setTimeout(() => { del.dataset.armed = ""; del.textContent = "🗑"; }, 4000); return; }
         const { error } = await sb.from("candidates").delete().eq("id", r.id);
         if (error) msg("Could not delete: " + error.message, true); else { msg(`${r.name} deleted.`); load(); }
       };
       act.append(edit, del);
-      tr.append(td(r.name, "strong"), td(r.mobile, "mono"), Object.assign(td(r.email, "mono small"), { title: r.email || "" }), td(r.post, "cell-wrap"), td(r.skills, "cell-wrap"), td(r.city),
-        td(r.experience_years != null ? r.experience_years + " yrs" : ""), status, Object.assign(td(r.resume_file, "mono small"), { title: r.resume_file || "" }),
+      tr.append(td(r.name, "strong"), td(r.mobile, "mono"), Object.assign(td(r.email, "mono small"), { title: r.email || "" }), td(r.post, "cell-wrap"), td(r.city),
+        td(r.experience_years != null ? r.experience_years + " yrs" : ""), status, td(r.company, "cell-wrap"), td(r.hr_name, "cell-wrap"),
         td(new Date(r.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "2-digit" })), act);
       return tr;
     }));
@@ -111,10 +111,10 @@
   $("c-filter").addEventListener("change", load);
 
   // ------------------------------------------------------------ add / edit
-  const fields = ["name", "mobile", "email", "post", "skills", "city", "experience_years", "status", "resume_file", "notes"];
+  const fields = ["name", "mobile", "email", "post", "skills", "city", "experience_years", "status", "company", "hr_name", "resume_file", "notes"];
   // the mobile/email columns come from supabase/002_add_mobile_email.sql
-  const columnHint = (err) => /mobile|email/i.test(err && err.message || "") && /column|schema/i.test(err.message)
-    ? "The Mobile/Email columns are missing in Supabase. Run supabase/002_add_mobile_email.sql once." : "";
+  const columnHint = (err) => /mobile|email|company|hr_name/i.test(err && err.message || "") && /column|schema/i.test(err.message)
+    ? "Some columns are missing in Supabase. Run the SQL files in the supabase folder (002 and 003) once." : "";
   function startEdit(r) {
     editingId = r.id;
     fields.forEach((f) => { $("f-" + f).value = r[f] == null ? "" : r[f]; });
@@ -143,6 +143,7 @@
     if (res.error) { msg(columnHint(res.error) || "Could not save: " + res.error.message, true); return; }
     msg(editingId ? `${rec.name} updated.` : `${rec.name} added to the list.`);
     resetForm();
+    $("f-company").value = rec.company || ""; $("f-hr_name").value = rec.hr_name || "";
     load();
   });
 
@@ -164,7 +165,9 @@
     // this resume is already in the form (maybe corrected by hand): keep it
     if (!scroll && d.resume_file && $("f-resume_file").value === d.resume_file) return;
     if (editingId) { msg("Save or cancel the edit in progress first, then the resume details can be filled in.", true); return; }
+    const keepCompany = $("f-company").value, keepHr = $("f-hr_name").value;
     resetForm();
+    $("f-company").value = keepCompany; $("f-hr_name").value = keepHr;
     ["name", "mobile", "email", "post", "city", "skills", "resume_file"].forEach((f) => { if (d[f]) $("f-" + f).value = d[f]; });
     if (d.experience_years != null) $("f-experience_years").value = d.experience_years;
     syncPost();

@@ -130,11 +130,12 @@
   .ctable th, .ctable td { padding: 8px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; white-space: nowrap; }
   .ctable tr:last-child td { border-bottom: 0; }
   .ctable th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 500; background: var(--bg); }
-  .ctable td.cell-wrap { white-space: normal; min-width: 130px; max-width: 220px; }
+  .ctable td.cell-wrap { white-space: normal; min-width: 110px; max-width: 200px; }
   .ctable td.strong { font-weight: 600; }
   .ctable td.small, .small { font-size: 12px; }
-  .ctable td.mono.small { max-width: 190px; overflow: hidden; text-overflow: ellipsis; }
+  .ctable td.mono.small { max-width: 170px; overflow: hidden; text-overflow: ellipsis; }
   button.small { padding: 4px 9px; font-size: 13px; margin-right: 4px; }
+  button.icon { padding: 4px 8px; min-width: 32px; }
   button.danger { color: var(--err); }
   .chip.st-shortlisted, .chip.st-selected { background: var(--ok-soft); color: var(--ok); }
   .chip.st-sent-to-client { background: var(--warn-soft); color: var(--warn); }
@@ -195,7 +196,7 @@
   .install-btn.on-dark { background: var(--brand-mark); color: var(--brand-bg); border-color: var(--brand-mark); }
   @media (display-mode: standalone) { .install-btn { display: none !important; } }
   @media (min-width: 1500px) {
-    #app { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); grid-template-rows: auto auto auto auto auto 1fr; align-items: start; column-gap: 24px; }
+    #app { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); grid-template-rows: auto auto auto auto auto 1fr; align-items: start; column-gap: 24px; }
     #app > .app-bar, #app > .note, #app > footer { grid-column: 1 / -1; }
     #app > header, #app > .example, #app > section.panel:not(#candidates), #app > #results { grid-column: 1; }
     #app > #candidates { grid-column: 2; grid-row: 2 / span 5; }
@@ -323,6 +324,8 @@
             <option>New</option><option>Shortlisted</option><option>Sent to client</option><option>Selected</option><option>Rejected</option>
           </select>
         </label>
+        <label class="field">Company (sent to)<input id="f-company" maxlength="200" autocomplete="off" placeholder="e.g. Flipkart Minutes, Mohali"></label>
+        <label class="field">HR name<input id="f-hr_name" maxlength="200" autocomplete="off" placeholder="e.g. Ms. Neha Sharma"></label>
         <label class="field">Masked resume file<input id="f-resume_file" maxlength="300" placeholder="Filled in automatically"></label>
         <label class="field full">Skills<input id="f-skills" maxlength="1000" placeholder="e.g. Tally, GST, Excel"></label>
         <label class="field full">Notes<textarea id="f-notes" maxlength="2000"></textarea></label>
@@ -333,7 +336,7 @@
       </form>
       <div id="c-msg" role="status" aria-live="polite"></div>
       <div class="toolbar" style="margin:8px 0 12px">
-        <input id="c-search" type="search" placeholder="Search by name, mobile, email, skill, city or post">
+        <input id="c-search" type="search" placeholder="Search by name, mobile, email, post, city, company or HR">
         <select id="c-filter" aria-label="Status filter">
           <option value="">All statuses</option><option>New</option><option>Shortlisted</option><option>Sent to client</option><option>Selected</option><option>Rejected</option>
         </select>
@@ -341,7 +344,7 @@
       </div>
       <div class="ctable">
         <table>
-          <thead><tr><th>Name</th><th>Mobile</th><th>Email</th><th>Post</th><th>Skills</th><th>City</th><th>Exp.</th><th>Status</th><th>Resume</th><th>Date</th><th></th></tr></thead>
+          <thead><tr><th>Name</th><th>Mobile</th><th>Email</th><th>Post</th><th>City</th><th>Exp.</th><th>Status</th><th>Company</th><th>HR name</th><th>Date</th><th></th></tr></thead>
           <tbody id="c-rows"></tbody>
         </table>
       </div>
