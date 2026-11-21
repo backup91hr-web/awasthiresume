@@ -91,6 +91,8 @@
   .wa:hover:not(:disabled) { background: #178a45; }
   .em { display: inline-flex; align-items: center; gap: 7px; background: var(--surface); color: var(--fg); border-color: var(--line); }
   .em:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  button.danger.remove { color: var(--err); border-color: var(--line); background: transparent; }
+  button.danger.remove:hover { border-color: var(--err); }
   .file-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
   .name { font-weight: 600; word-break: break-all; min-width: 0; }
   .chip { display: inline-block; font-size: 12px; font-weight: 500; padding: 2px 9px; border-radius: 99px; margin-left: 8px; vertical-align: 1px; background: var(--accent-soft); color: var(--accent); }
@@ -893,11 +895,19 @@
     wa.innerHTML = WA_ICON + "<span>Send WhatsApp</span>";
     const em = el("button", { className: "em", type: "button", disabled: true, title: "Send the masked resume by email" });
     em.innerHTML = MAIL_ICON + "<span>Send Email</span>";
+    const rm = el("button", { className: "ghost danger remove", type: "button", textContent: "🗑 Remove", title: "Remove this resume from the list" });
     const body = el("div");
     const card = el("article", { className: "file" },
-      el("div", { className: "file-head" }, el("div", { className: "name" }, file.name, chip), el("div", { className: "file-actions" }, dl, wa, em)),
+      el("div", { className: "file-head" }, el("div", { className: "name" }, file.name, chip), el("div", { className: "file-actions" }, dl, wa, em, rm)),
       el("div", { className: "bar" }, bar), status, body);
     results.append(card);
+    let entry = null;
+    rm.onclick = () => {
+      card.remove();
+      if (entry) { const i = done.indexOf(entry); if (i >= 0) done.splice(i, 1); }
+      zipBtn.hidden = done.length < 2;
+      say(`${file.name} removed from the list.`);
+    };
     const progress = (msg, f) => { status.textContent = msg; if (f != null) bar.style.width = Math.round(Math.min(1, f) * 100) + "%"; };
     try {
       let res;
@@ -939,7 +949,8 @@
       wa.onclick = () => { shareWhatsApp(outName, res.blob, details); prefill(); };
       em.disabled = false;
       em.onclick = () => { shareEmail(outName, res.blob, details); prefill(); };
-      done.push({ name: outName, blob: res.blob });
+      entry = { name: outName, blob: res.blob };
+      done.push(entry);
       document.dispatchEvent(new CustomEvent("resume-masked", { detail: { card, details } }));
       zipBtn.hidden = done.length < 2;
     } catch (e) {
