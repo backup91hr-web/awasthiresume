@@ -42,23 +42,23 @@
     const i = $("login-pass"), t = $("pass-toggle");
     const showing = i.type === "text";
     i.type = showing ? "password" : "text";
-    t.textContent = showing ? "Dikhao" : "Lukao";
-    t.setAttribute("aria-label", showing ? "Password dikhao" : "Password lukao");
+    t.textContent = showing ? "Show" : "Hide";
+    t.setAttribute("aria-label", showing ? "Show password" : "Hide password");
   });
   $("login-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const lm = $("login-msg"), btn = $("login-btn");
     let id = $("login-user").value.trim().toLowerCase();
     const pass = $("login-pass").value;
-    if (!id || !pass) { lm.textContent = "User ID te password dovein bharo."; return; }
+    if (!id || !pass) { lm.textContent = "Enter both your user ID and password."; return; }
     if (!id.includes("@")) id = `${id}@${LOGIN_DOMAIN}`; // short user IDs like "rahul"
-    lm.textContent = ""; btn.disabled = true; btn.textContent = "Login ho reha hai...";
+    lm.textContent = ""; btn.disabled = true; btn.textContent = "Logging in...";
     const { error } = await sb.auth.signInWithPassword({ email: id, password: pass });
     btn.disabled = false; btn.textContent = "Login";
     if (error) {
       lm.textContent = /fetch|network/i.test(error.message || "")
-        ? "Internet naal judan vich dikkat hai. Thodi der baad try karo."
-        : "User ID ja password galat hai.";
+        ? "Could not connect to the internet. Please try again in a moment."
+        : "Wrong user ID or password.";
       return;
     }
     $("login-pass").value = "";
@@ -79,13 +79,13 @@
     if (q) req = req.or(["name", "mobile", "email", "skills", "city", "post"].map((c) => `${c}.ilike.%${q}%`).join(","));
     if (st) req = req.eq("status", st);
     const { data, error } = await req;
-    if (error) { msg(columnHint(error) || "List load nahi hoi: " + error.message, true); return; }
+    if (error) { msg(columnHint(error) || "Could not load the list: " + error.message, true); return; }
     rows = data;
     render();
   }
   const td = (text, cls) => { const c = document.createElement("td"); c.textContent = text == null ? "" : text; if (cls) c.className = cls; return c; };
   function render() {
-    $("c-count").textContent = `${rows.length} candidate`;
+    $("c-count").textContent = `${rows.length} candidate${rows.length === 1 ? "" : "s"}`;
     tbody.replaceChildren(...rows.map((r) => {
       const tr = document.createElement("tr");
       const status = td(""); const chip = document.createElement("span");
@@ -95,13 +95,13 @@
       edit.onclick = () => startEdit(r);
       const del = Object.assign(document.createElement("button"), { type: "button", className: "ghost small danger", textContent: "Delete" });
       del.onclick = async () => {
-        if (del.dataset.armed !== "1") { del.dataset.armed = "1"; del.textContent = "Pakka?"; setTimeout(() => { del.dataset.armed = ""; del.textContent = "Delete"; }, 4000); return; }
+        if (del.dataset.armed !== "1") { del.dataset.armed = "1"; del.textContent = "Sure?"; setTimeout(() => { del.dataset.armed = ""; del.textContent = "Delete"; }, 4000); return; }
         const { error } = await sb.from("candidates").delete().eq("id", r.id);
-        if (error) msg("Delete nahi hoya: " + error.message, true); else { msg(`${r.name} hata ditta.`); load(); }
+        if (error) msg("Could not delete: " + error.message, true); else { msg(`${r.name} deleted.`); load(); }
       };
       act.append(edit, del);
       tr.append(td(r.name, "strong"), td(r.mobile, "mono"), Object.assign(td(r.email, "mono small"), { title: r.email || "" }), td(r.post, "cell-wrap"), td(r.skills, "cell-wrap"), td(r.city),
-        td(r.experience_years != null ? r.experience_years + " saal" : ""), status, Object.assign(td(r.resume_file, "mono small"), { title: r.resume_file || "" }),
+        td(r.experience_years != null ? r.experience_years + " yrs" : ""), status, Object.assign(td(r.resume_file, "mono small"), { title: r.resume_file || "" }),
         td(new Date(r.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "2-digit" })), act);
       return tr;
     }));
@@ -114,18 +114,18 @@
   const fields = ["name", "mobile", "email", "post", "skills", "city", "experience_years", "status", "resume_file", "notes"];
   // the mobile/email columns come from supabase/002_add_mobile_email.sql
   const columnHint = (err) => /mobile|email/i.test(err && err.message || "") && /column|schema/i.test(err.message)
-    ? "Supabase vich Mobile/Email de khaane hune nahi bane. supabase/002_add_mobile_email.sql wala SQL ikk vaari Run karo." : "";
+    ? "The Mobile/Email columns are missing in Supabase. Run supabase/002_add_mobile_email.sql once." : "";
   function startEdit(r) {
     editingId = r.id;
     fields.forEach((f) => { $("f-" + f).value = r[f] == null ? "" : r[f]; });
-    $("c-save").textContent = "Badlav save karo";
+    $("c-save").textContent = "Save changes";
     $("c-cancel").hidden = false;
     form.scrollIntoView({ behavior: "smooth", block: "start" });
     $("f-name").focus();
   }
   function resetForm() {
     editingId = null; form.reset(); $("f-status").value = "New";
-    $("c-save").textContent = "Candidate add karo"; $("c-cancel").hidden = true;
+    $("c-save").textContent = "Add candidate"; $("c-cancel").hidden = true;
   }
   $("c-cancel").addEventListener("click", resetForm);
   form.addEventListener("submit", async (e) => {
@@ -133,33 +133,33 @@
     const rec = {};
     fields.forEach((f) => { const v = $("f-" + f).value.trim(); rec[f] = v === "" ? null : v; });
     if (rec.experience_years != null) rec.experience_years = Number(rec.experience_years);
-    if (!rec.name) { msg("Candidate da naam zaroori hai.", true); return; }
+    if (!rec.name) { msg("Candidate name is required.", true); return; }
     $("c-save").disabled = true;
     const res = editingId
       ? await sb.from("candidates").update(rec).eq("id", editingId)
       : await sb.from("candidates").insert(rec);
     $("c-save").disabled = false;
-    if (res.error) { msg(columnHint(res.error) || "Save nahi hoya: " + res.error.message, true); return; }
-    msg(editingId ? `${rec.name} update ho gaya.` : `${rec.name} list vich add ho gaya.`);
+    if (res.error) { msg(columnHint(res.error) || "Could not save: " + res.error.message, true); return; }
+    msg(editingId ? `${rec.name} updated.` : `${rec.name} added to the list.`);
     resetForm();
     load();
   });
 
-  // fill the form from a masked resume (Download button, or "Candidate list vich pao")
+  // fill the form from a masked resume (Download / Send buttons, or "Add to candidate list")
   function prefill(d, scroll) {
     if (!user || !d) return;
-    if (editingId) { msg("Pehlan chal rahi edit save ja cancel karo, phir resume di details bharangiyan.", true); return; }
+    if (editingId) { msg("Save or cancel the edit in progress first, then the resume details can be filled in.", true); return; }
     resetForm();
     ["name", "mobile", "email", "post", "city", "skills", "resume_file"].forEach((f) => { if (d[f]) $("f-" + f).value = d[f]; });
     if (d.experience_years != null) $("f-experience_years").value = d.experience_years;
-    msg(`${d.name || "Candidate"} di details resume vichon bhar ditti. Ikk vaari check karke "Candidate add karo" dabao.`);
+    msg(`Details for ${d.name || "the candidate"} were filled in from the resume. Check them, then press "Add candidate".`);
     if (scroll) { form.scrollIntoView({ behavior: "smooth", block: "start" }); $("f-name").focus(); }
   }
   document.addEventListener("resume-prefill", (e) => prefill(e.detail.details, e.detail.scroll));
   document.addEventListener("resume-masked", (e) => {
     const { card, details } = e.detail;
     const head = card.querySelector(".file-head");
-    const b = Object.assign(document.createElement("button"), { type: "button", className: "ghost to-candidates", textContent: "Candidate list vich pao" });
+    const b = Object.assign(document.createElement("button"), { type: "button", className: "ghost to-candidates", textContent: "Add to candidate list" });
     b.hidden = !user;
     b.onclick = () => prefill(details, true);
     head.append(b);

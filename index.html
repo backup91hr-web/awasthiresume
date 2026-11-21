@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pa" translate="no">
+<html lang="en" translate="no">
 <head>
 <meta charset="utf-8">
 <meta name="google" content="notranslate">
@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="Awasthi Resume">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Awasthi Resume</title>
-<meta name="description" content="Resume vich mobile number te email ID lukaun wala free tool. PDF, Word, scanned PDF te photo.">
+<meta name="description" content="Hide mobile numbers and email IDs in resumes. Works with PDF, Word, scanned PDF and photos.">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
@@ -89,6 +89,8 @@
   .file-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .wa { display: inline-flex; align-items: center; gap: 7px; background: #1fa855; color: #ffffff; }
   .wa:hover:not(:disabled) { background: #178a45; }
+  .em { display: inline-flex; align-items: center; gap: 7px; background: var(--surface); color: var(--fg); border-color: var(--line); }
+  .em:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
   .file-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
   .name { font-weight: 600; word-break: break-all; min-width: 0; }
   .chip { display: inline-block; font-size: 12px; font-weight: 500; padding: 2px 9px; border-radius: 99px; margin-left: 8px; vertical-align: 1px; background: var(--accent-soft); color: var(--accent); }
@@ -209,16 +211,16 @@
 </style>
 </head>
 <body>
-<div class="boot" id="boot"><div><div class="spinner"></div>Khul reha hai...</div></div>
+<div class="boot" id="boot"><div><div class="spinner"></div>Loading...</div></div>
 
 <main class="login-screen" id="login-screen" hidden>
   <section class="brand-side">
     <div class="brand-top"><div class="brand"><svg class="brand-logo" viewBox="0 0 44 44" aria-hidden="true"><rect x="7" y="3" width="30" height="38" rx="4" fill="#ffffff"/><rect x="12" y="10" width="14" height="3" rx="1.5" fill="#9fb3cc"/><rect x="12" y="17" width="20" height="2.5" rx="1.25" fill="#d6dee9"/><rect x="11" y="23" width="22" height="6" rx="1.5" fill="#f2b33d"/><rect x="12" y="33" width="16" height="2.5" rx="1.25" fill="#d6dee9"/></svg><div class="brand-name">Awasthi Resume<small>Resume Mask Software</small></div></div>
-      <button class="install-btn on-dark" type="button" hidden>⬇ App install karo</button>
+      <button class="install-btn on-dark" type="button" hidden>⬇ Install app</button>
     </div>
     <div class="brand-pitch">
-      <h2>Resume bhejo, <mark>contact lukao</mark>.</h2>
-      <p>Client nu resume bhejan ton pehlan candidate da mobile number te email aap <span class="mono">X</span> ban jaande ne. PDF, Word, scanned PDF te photo, sab chalde ne.</p>
+      <h2>Share resumes, <mark>hide contacts</mark>.</h2>
+      <p>Before a resume goes to a client, the candidate's mobile number and email are replaced with <span class="mono">X</span> automatically. Works with PDF, Word, scanned PDF and photos.</p>
     </div>
     <div class="cv-card" aria-hidden="true">
       <div class="cv-name">Simran Kaur</div>
@@ -229,26 +231,26 @@
       <div class="cv-bars"><i style="width:92%"></i><i style="width:78%"></i><i style="width:85%"></i></div>
     </div>
     <ul class="features">
-      <li>Mobile de pehle 8 digit te poori email ID lukdi hai</li>
-      <li>Resume tuhade browser vich hi process hunde ne</li>
-      <li>Team layi candidate list, search te status naal</li>
+      <li>Hides the first 8 digits of the mobile number and the full email ID</li>
+      <li>Resumes are processed in your browser, never uploaded</li>
+      <li>Team candidate list with search and status</li>
     </ul>
   </section>
   <section class="form-side">
     <div class="login-card">
       <div>
-        <h1>Login karo</h1>
-        <p class="sub">Apni User ID te password naal andar aao.</p>
+        <h1>Log in</h1>
+        <p class="sub">Sign in with your user ID and password.</p>
       </div>
       <form id="login-form" novalidate>
-        <label class="field">User ID ja Email<input id="login-user" autocomplete="username" autocapitalize="none" spellcheck="false" required placeholder="jiven: rahul ja rahul@gmail.com"></label>
+        <label class="field">User ID or email<input id="login-user" autocomplete="username" autocapitalize="none" spellcheck="false" required placeholder="e.g. rahul or rahul@gmail.com"></label>
         <label class="field">Password
-          <span class="pass-wrap"><input id="login-pass" type="password" autocomplete="current-password" required><button class="pass-toggle" id="pass-toggle" type="button" aria-label="Password dikhao">Dikhao</button></span>
+          <span class="pass-wrap"><input id="login-pass" type="password" autocomplete="current-password" required><button class="pass-toggle" id="pass-toggle" type="button" aria-label="Show password">Show</button></span>
         </label>
         <p id="login-msg" role="alert"></p>
         <button class="primary" id="login-btn" type="submit">Login</button>
       </form>
-      <p class="help">Password bhul gaye ja navi ID chahidi hai? Admin naal gall karo.</p>
+      <p class="help">Forgot your password or need a new ID? Contact your admin.</p>
     </div>
   </section>
 </main>
@@ -256,17 +258,17 @@
 <div class="wrap" id="app" hidden>
   <div class="app-bar">
     <div class="brand"><svg class="brand-logo" style="width:34px;height:34px" viewBox="0 0 44 44" aria-hidden="true"><rect x="7" y="3" width="30" height="38" rx="4" fill="#ffffff"/><rect x="12" y="10" width="14" height="3" rx="1.5" fill="#9fb3cc"/><rect x="12" y="17" width="20" height="2.5" rx="1.25" fill="#d6dee9"/><rect x="11" y="23" width="22" height="6" rx="1.5" fill="#f2b33d"/><rect x="12" y="33" width="16" height="2.5" rx="1.25" fill="#d6dee9"/></svg><div class="brand-name">Awasthi Resume<small>Resume Mask Software</small></div></div>
-    <button class="install-btn" type="button" hidden>⬇ App install karo</button>
+    <button class="install-btn" type="button" hidden>⬇ Install app</button>
     <div class="who" id="who-box" hidden><span>Login: <strong id="c-who"></strong></span><button class="ghost small" id="c-logout" type="button">Logout</button></div>
   </div>
   <header>
-    <h1>Resume mask karo</h1>
-    <p class="lede">Resume pao, te mobile number de pehle 8 digit te email ID <code>X</code> ban jaange. PDF, Word (.docx), scanned PDF te photo (JPG/PNG) sab chalde ne. Files tuhade browser vich hi process hundian ne, kise server te upload nahi hundian.</p>
+    <h1>Mask resumes</h1>
+    <p class="lede">Add a resume and the first 8 digits of the mobile number and the email ID become <code>X</code>. Works with PDF, Word (.docx), scanned PDF and photos (JPG/PNG). Files are processed in your browser and are never uploaded to a server.</p>
   </header>
 
-  <div class="example" aria-label="Misaal">
+  <div class="example" aria-label="Example">
     <table>
-      <tr><th>Resume vich</th><th></th><th>Masked</th></tr>
+      <tr><th>In the resume</th><th></th><th>Masked</th></tr>
       <tr><td class="mono">98765 43210</td><td class="arrow">→</td><td class="mono masked">XXXXX XXX10</td></tr>
       <tr><td class="mono">+91-9123456789</td><td class="arrow">→</td><td class="mono masked">+91-XXXXXXXX89</td></tr>
       <tr><td class="mono">rahul.sharma92@gmail.com</td><td class="arrow">→</td><td class="mono masked">XXXXXXXXXX.com</td></tr>
@@ -276,22 +278,22 @@
   <section class="panel">
     <label class="drop" id="drop">
       <input type="file" id="files" multiple accept=".pdf,.docx,.jpg,.jpeg,.png,.webp,.bmp">
-      <strong>Resume ethe chuno ja kheench ke chhado</strong>
-      <span>Ikko vaari kai files chun sakde ho · PDF, DOCX, JPG, PNG</span>
+      <strong>Choose resumes or drag and drop them here</strong>
+      <span>You can add several files at once · PDF, DOCX, JPG, PNG</span>
     </label>
     <div class="row">
       <div class="opts">
-        <label for="visible">Mobile de aakhri</label>
+        <label for="visible">Show last</label>
         <select id="visible">
           <option value="0">0</option>
           <option value="2" selected>2</option>
           <option value="4">4</option>
         </select>
-        <span>digit dikhao</span>
+        <span>digits of the mobile number</span>
       </div>
       <div class="row" style="justify-content:flex-end">
-        <button class="ghost" id="sample" type="button">Sample resume naal try karo</button>
-        <button class="primary" id="zipall" type="button" hidden>Saariyan ZIP vich download karo</button>
+        <button class="ghost" id="sample" type="button">Try a sample resume</button>
+        <button class="primary" id="zipall" type="button" hidden>Download all as ZIP</button>
       </div>
     </div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -304,54 +306,54 @@
     <div class="row">
       <div>
         <h2>Candidate list</h2>
-        <p class="sub">Sirf login wali team hi eh list dekh sakdi hai. Ethe candidate da poora mobile te email save hunda hai.</p>
+        <p class="sub">Only signed-in team members can see this list. It stores the candidate's full mobile number and email.</p>
       </div>
     </div>
 
     <div id="c-app">
       <form id="c-form" class="grid-form">
-        <label class="field">Naam *<input id="f-name" required maxlength="200" autocomplete="off"></label>
-        <label class="field">Mobile<input id="f-mobile" type="tel" maxlength="30" inputmode="tel" autocomplete="off" placeholder="jiven 98765 43210"></label>
-        <label class="field">Email<input id="f-email" type="email" maxlength="200" autocomplete="off" placeholder="jiven naam@gmail.com"></label>
-        <label class="field">Post / Job<input id="f-post" maxlength="200" placeholder="jiven Accountant"></label>
-        <label class="field">City<input id="f-city" maxlength="100" placeholder="jiven Ludhiana"></label>
-        <label class="field">Experience (saal)<input id="f-experience_years" type="number" min="0" max="79" step="0.5"></label>
+        <label class="field">Name *<input id="f-name" required maxlength="200" autocomplete="off"></label>
+        <label class="field">Mobile<input id="f-mobile" type="tel" maxlength="30" inputmode="tel" autocomplete="off" placeholder="e.g. 98765 43210"></label>
+        <label class="field">Email<input id="f-email" type="email" maxlength="200" autocomplete="off" placeholder="e.g. name@gmail.com"></label>
+        <label class="field">Post / Job<input id="f-post" maxlength="200" placeholder="e.g. Accountant"></label>
+        <label class="field">City<input id="f-city" maxlength="100" placeholder="e.g. Ludhiana"></label>
+        <label class="field">Experience (years)<input id="f-experience_years" type="number" min="0" max="79" step="0.5"></label>
         <label class="field">Status
           <select id="f-status">
             <option>New</option><option>Shortlisted</option><option>Sent to client</option><option>Selected</option><option>Rejected</option>
           </select>
         </label>
-        <label class="field">Masked resume file<input id="f-resume_file" maxlength="300" placeholder="aap bhar jaandi hai"></label>
-        <label class="field full">Skills<input id="f-skills" maxlength="1000" placeholder="jiven Tally, GST, Excel"></label>
+        <label class="field">Masked resume file<input id="f-resume_file" maxlength="300" placeholder="Filled in automatically"></label>
+        <label class="field full">Skills<input id="f-skills" maxlength="1000" placeholder="e.g. Tally, GST, Excel"></label>
         <label class="field full">Notes<textarea id="f-notes" maxlength="2000"></textarea></label>
         <div class="full row" style="justify-content:flex-start">
-          <button class="primary" id="c-save" type="submit">Candidate add karo</button>
+          <button class="primary" id="c-save" type="submit">Add candidate</button>
           <button class="ghost" id="c-cancel" type="button" hidden>Cancel</button>
         </div>
       </form>
       <div id="c-msg" role="status" aria-live="polite"></div>
       <div class="toolbar" style="margin:8px 0 12px">
-        <input id="c-search" type="search" placeholder="Naam, mobile, email, skill, city ja post naal labho">
+        <input id="c-search" type="search" placeholder="Search by name, mobile, email, skill, city or post">
         <select id="c-filter" aria-label="Status filter">
-          <option value="">Saare status</option><option>New</option><option>Shortlisted</option><option>Sent to client</option><option>Selected</option><option>Rejected</option>
+          <option value="">All statuses</option><option>New</option><option>Shortlisted</option><option>Sent to client</option><option>Selected</option><option>Rejected</option>
         </select>
         <span class="sub" id="c-count"></span>
       </div>
       <div class="ctable">
         <table>
-          <thead><tr><th>Naam</th><th>Mobile</th><th>Email</th><th>Post</th><th>Skills</th><th>City</th><th>Exp.</th><th>Status</th><th>Resume</th><th>Date</th><th></th></tr></thead>
+          <thead><tr><th>Name</th><th>Mobile</th><th>Email</th><th>Post</th><th>Skills</th><th>City</th><th>Exp.</th><th>Status</th><th>Resume</th><th>Date</th><th></th></tr></thead>
           <tbody id="c-rows"></tbody>
         </table>
       </div>
-      <p class="sub" id="c-empty" hidden>Hune list khaali hai. Upar form bhar ke pehla candidate add karo, ja resume mask karke "Candidate list vich pao" dabao.</p>
+      <p class="sub" id="c-empty" hidden>The list is empty. Fill in the form above to add the first candidate, or mask a resume and press "Add to candidate list".</p>
     </div>
   </section>
 
   <ul class="note">
-    <li>Scanned resume te photo nu OCR naal padhya janda hai. Pehli vaari OCR shuru hon vich 10-20 second lag sakde ne.</li>
-    <li>OCR 100% pakka nahi hunda. Dhundli photo vich number miss ho sakda hai, is layi "Dekho" khol ke check kar lena.</li>
-    <li>Masked PDF tasveer wale pages vich bandi hai, taan ki asli number kise vi tarah copy ja recover na ho sake.</li>
-    <li>Purani .doc file nu pehlan Word vich .docx bana ke save karo.</li>
+    <li>Scanned resumes and photos are read with OCR. The first OCR run can take 10-20 seconds to start.</li>
+    <li>OCR is not 100% accurate. A number in a blurry photo can be missed, so open "Preview" to check.</li>
+    <li>Masked PDFs are saved as image pages, so the original number cannot be copied or recovered.</li>
+    <li>Save old .doc files as .docx in Word first.</li>
   </ul>
   <footer class="note">© Awasthi Resume</footer>
 </div>
@@ -413,7 +415,7 @@
   let ocrWorker = null;
   async function getOcr(progress) {
     if (ocrWorker) return ocrWorker;
-    progress("OCR tyaar ho reha hai (pehli vaari thoda time lagda hai)...", 0.05);
+    progress("Preparing OCR (the first time takes a little longer)...", 0.05);
     const b64 = await (await fetch(abs("lib/eng-traineddata-gz.b64.txt"))).text();
     const bin = Uint8Array.from(atob(b64.trim()), (c) => c.charCodeAt(0));
     ocrWorker = await Tesseract.createWorker([{ code: "eng", data: bin }], 1, {
@@ -545,11 +547,11 @@
       ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
       await page.render({ canvasContext: ctx, viewport }).promise;
       const base = (p - 1) / doc.numPages, step = 1 / doc.numPages;
-      progress(`Page ${p}/${doc.numPages} padh reha haan...`, base + step * 0.2);
+      progress(`Reading page ${p}/${doc.numPages}...`, base + step * 0.2);
       let hits = await pdfTextHits(page, viewport);
       if (hits === null) {
         usedOcr = true;
-        progress(`Page ${p}/${doc.numPages}: OCR chal reha hai...`, base + step * 0.3);
+        progress(`Page ${p}/${doc.numPages}: running OCR...`, base + step * 0.3);
         await getOcr(progress);
         hits = await ocrHits(canvas, (f) => progress(`Page ${p}/${doc.numPages}: OCR ${Math.round(f * 100)}%`, base + step * (0.3 + 0.6 * f)));
         if (p === 1) {
@@ -627,7 +629,7 @@
     const names = Object.keys(zip.files).filter((n) => !zip.files[n].dir);
     let i = 0;
     for (const name of names) {
-      progress(`Word file padh reha haan...`, 0.1 + 0.8 * (i++ / names.length));
+      progress(`Reading Word file...`, 0.1 + 0.8 * (i++ / names.length));
       if (/^word\/.*\.xml$/.test(name)) {
         const src = await zip.file(name).async("string");
         const dom = new DOMParser().parseFromString(src, "application/xml");
@@ -668,19 +670,19 @@
         const a = Object.assign(document.createElement("a"), { href: url, download: filename });
         document.body.append(a); a.click(); a.remove();
         setTimeout(() => URL.revokeObjectURL(url), 60000);
-        say(`${filename} download ho gayi.`);
+        say(`${filename} downloaded.`);
         return;
       }
-      say("Is view vich download nahi ho sakda. Page nu claude.ai vich khol ke try karo."); return;
+      say("Downloads are not available in this view. Open the page in your browser and try again."); return;
     }
     try {
       await downloads.save({ filename, data: blob });
-      say(`${filename} download ho gayi.`);
+      say(`${filename} downloaded.`);
     } catch (e) {
       const c = e && e.code;
-      if (c === "declined") say("Download cancel kar ditta gaya.");
-      else if (c === "rate_limited") say("Ikk download pehlan hi khulla hai. Ohnu poora karke dobara dabao.");
-      else say("Download nahi ho saki. Thodi der baad dobara try karo.");
+      if (c === "declined") say("Download cancelled.");
+      else if (c === "rate_limited") say("Another download is waiting. Finish it, then try again.");
+      else say("The download did not work. Please try again in a moment.");
     }
   }
 
@@ -692,7 +694,7 @@
     if (d && d.name) t += `: ${d.name}`;
     if (d && d.post) t += ` - ${d.post}`;
     if (d && d.city) t += `, ${d.city}`;
-    if (d && d.experience_years !== null && d.experience_years !== undefined && d.experience_years !== "") t += ` (${d.experience_years} saal experience)`;
+    if (d && d.experience_years !== null && d.experience_years !== undefined && d.experience_years !== "") t += ` (${d.experience_years} years experience)`;
     return t;
   }
   async function shareWhatsApp(name, blob, details) {
@@ -700,13 +702,30 @@
     const f = new File([blob], name, { type: blob.type || "application/octet-stream" });
     // phone / Windows Chrome: share sheet with the file attached -> pick WhatsApp
     if (navigator.canShare && navigator.share && navigator.canShare({ files: [f] })) {
-      try { await navigator.share({ files: [f], title: name, text }); say("Resume share ho gaya."); return; }
+      try { await navigator.share({ files: [f], title: name, text }); say("Resume shared."); return; }
       catch (e) { if (e && e.name === "AbortError") return; }
     }
     // otherwise: save the file and open WhatsApp with the message ready, then attach the file there
     await save(name, blob);
     window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank", "noopener");
-    say(`${name} download ho gayi te WhatsApp khul gaya. Ohde vich 📎 dabba ke eh file attach karo te bhejo.`);
+    say(`${name} downloaded and WhatsApp opened. Tap 📎 in WhatsApp to attach the file, then send.`);
+  }
+
+  // ---------------------------------------------------------------- Email
+  const MAIL_ICON = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M3 6h18v12H3z"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="m3 7 9 6 9-6"/></svg>';
+  async function shareEmail(name, blob, details) {
+    const subject = waText(details);
+    const body = `Hello,\n\nPlease find the candidate's resume attached: ${name}\n\n${subject}\n\nRegards,\nAwasthi Resume`;
+    const f = new File([blob], name, { type: blob.type || "application/octet-stream" });
+    // phone / Windows Chrome: share sheet with the file attached -> pick Gmail or Outlook
+    if (navigator.canShare && navigator.share && navigator.canShare({ files: [f] })) {
+      try { await navigator.share({ files: [f], title: subject, text: body }); say("Resume shared."); return; }
+      catch (e) { if (e && e.name === "AbortError") return; }
+    }
+    // otherwise: save the file and open a Gmail draft with subject and message filled in
+    await save(name, blob);
+    window.open("https://mail.google.com/mail/?view=cm&fs=1&su=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body), "_blank", "noopener");
+    say(`${name} downloaded and a Gmail draft opened. Attach the file with 📎, add the client's email, then send.`);
   }
 
   function maskedName(name, ext) { return name.replace(/\.[^.]+$/, "") + "_masked." + ext; }
@@ -714,14 +733,16 @@
   async function processFile(file) {
     const ext = (file.name.split(".").pop() || "").toLowerCase();
     const bar = el("i");
-    const status = el("div", { className: "status", textContent: "Line vich..." });
+    const status = el("div", { className: "status", textContent: "Waiting..." });
     const chip = el("span", { className: "chip" });
     const dl = el("button", { className: "primary", type: "button", textContent: "Download", disabled: true });
-    const wa = el("button", { className: "wa", type: "button", disabled: true, title: "Masked resume WhatsApp te bhejo" });
-    wa.innerHTML = WA_ICON + "<span>WhatsApp te bhejo</span>";
+    const wa = el("button", { className: "wa", type: "button", disabled: true, title: "Send the masked resume on WhatsApp" });
+    wa.innerHTML = WA_ICON + "<span>Send WhatsApp</span>";
+    const em = el("button", { className: "em", type: "button", disabled: true, title: "Send the masked resume by email" });
+    em.innerHTML = MAIL_ICON + "<span>Send Email</span>";
     const body = el("div");
     const card = el("article", { className: "file" },
-      el("div", { className: "file-head" }, el("div", { className: "name" }, file.name, chip), el("div", { className: "file-actions" }, dl, wa)),
+      el("div", { className: "file-head" }, el("div", { className: "name" }, file.name, chip), el("div", { className: "file-actions" }, dl, wa, em)),
       el("div", { className: "bar" }, bar), status, body);
     results.append(card);
     const progress = (msg, f) => { status.textContent = msg; if (f != null) bar.style.width = Math.round(Math.min(1, f) * 100) + "%"; };
@@ -731,25 +752,25 @@
       if (ext === "pdf") res = await maskPdf(new Uint8Array(buf), progress);
       else if (ext === "docx") res = await maskDocx(buf, progress);
       else if (["jpg", "jpeg", "png", "webp", "bmp"].includes(ext)) res = await maskImage(file, progress);
-      else throw new Error("Eh file type nahi chalda. PDF, DOCX, JPG ja PNG pao.");
+      else throw new Error("This file type is not supported. Use PDF, DOCX, JPG or PNG.");
       bar.style.width = "100%";
       bar.parentNode.hidden = true;
       chip.textContent = res.usedOcr ? "Scanned · OCR" : ext === "docx" ? "Word" : "PDF";
       const outName = maskedName(file.name, res.ext);
       if (res.changes.length) {
-        status.textContent = `${res.changes.length} cheezan mask kitian.`;
+        status.textContent = `${res.changes.length} item${res.changes.length === 1 ? "" : "s"} masked.`;
         chip.classList.add("ok");
         body.append(el("div", { className: "changes" }, el("table", {},
-          el("tr", {}, el("th", { textContent: "Pehlan" }), el("th", { textContent: "Hun" })),
+          el("tr", {}, el("th", { textContent: "Before" }), el("th", { textContent: "After" })),
           ...res.changes.map(([o, m]) => el("tr", {}, el("td", { className: "mono", textContent: o }), el("td", { className: "mono masked", textContent: m }))))));
       } else {
-        status.textContent = "Koi mobile number ja email nahi labhya. Ikk vaari khud check kar lo.";
+        status.textContent = "No mobile number or email found. Please check the resume yourself.";
         chip.classList.add("warn");
       }
       if (res.preview) {
-        const img = el("img", { className: "preview", alt: "Masked resume da pehla page" });
+        const img = el("img", { className: "preview", alt: "First page of the masked resume" });
         img.src = res.preview.toDataURL("image/jpeg", 0.8);
-        body.append(el("details", {}, el("summary", { textContent: "Dekho (masked pehla page)" }), img));
+        body.append(el("details", {}, el("summary", { textContent: "Preview (masked first page)" }), img));
       }
       dl.disabled = false;
       // candidate details for the team list (original contact, read from the resume)
@@ -762,6 +783,8 @@
       dl.onclick = () => { save(outName, res.blob); prefill(); };
       wa.disabled = false;
       wa.onclick = () => { shareWhatsApp(outName, res.blob, details); prefill(); };
+      em.disabled = false;
+      em.onclick = () => { shareEmail(outName, res.blob, details); prefill(); };
       done.push({ name: outName, blob: res.blob });
       document.dispatchEvent(new CustomEvent("resume-masked", { detail: { card, details } }));
       zipBtn.hidden = done.length < 2;
@@ -769,7 +792,7 @@
       console.error(e);
       bar.parentNode.hidden = true;
       status.className = "status err";
-      status.textContent = "Eh file process nahi ho saki: " + (e && e.message ? e.message : e);
+      status.textContent = "This file could not be processed: " + (e && e.message ? e.message : e);
     }
   }
 
@@ -804,7 +827,7 @@
 })();
 </script>
 <script>
-  // installable app: service worker + "App install karo" button
+  // installable app: service worker + "Install app" button
   if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
     navigator.serviceWorker.register("sw.js").catch(() => {});
   }

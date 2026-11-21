@@ -1,7 +1,7 @@
 {
   "name": "Awasthi Resume",
   "short_name": "Awasthi Resume",
-  "description": "Resume vich mobile number te email lukaun wala software, te team di candidate list.",
+  "description": "Hide mobile numbers and emails in resumes, with a team candidate list.",
   "id": "./",
   "start_url": "./",
   "scope": "./",
@@ -9,7 +9,7 @@
   "orientation": "any",
   "background_color": "#0f2a4a",
   "theme_color": "#0f2a4a",
-  "lang": "pa",
+  "lang": "en",
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
