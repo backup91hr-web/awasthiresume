@@ -6,38 +6,71 @@
   if (!section) return;
   const msg = (t, bad) => { const m = document.getElementById("c-msg"); m.textContent = t; m.classList.toggle("err", !!bad); };
 
+  const $ = (id) => document.getElementById(id);
+  const boot = $("boot"), loginScreen = $("login-screen"), app = $("app");
+  const show = (which) => {
+    boot.hidden = which !== "boot";
+    loginScreen.hidden = which !== "login";
+    app.hidden = which !== "app";
+  };
+
+  // No Supabase settings: no login, just the masking tool.
   if (!cfg.supabaseUrl || !cfg.supabaseAnonKey || !window.supabase) {
     section.hidden = true;
+    show("app");
     return;
   }
   section.hidden = false;
   const sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
   const mask = (s) => (window.AwasthiMask ? window.AwasthiMask.maskText(s || "") : s || "");
+  const LOGIN_DOMAIN = cfg.loginDomain || "awasthiresume.com";
 
-  const $ = (id) => document.getElementById(id);
-  const loginBox = $("c-login"), appBox = $("c-app"), form = $("c-form"), tbody = $("c-rows");
+  const form = $("c-form"), tbody = $("c-rows");
   let editingId = null, rows = [], searchTimer = null, user = null;
 
   // ------------------------------------------------------------ auth
   async function refreshAuth() {
     const { data } = await sb.auth.getSession();
     user = data.session ? data.session.user : null;
-    loginBox.hidden = !!user;
-    appBox.hidden = !user;
-    $("c-who").textContent = user ? user.email : "";
-    document.querySelectorAll(".to-candidates").forEach((b) => { b.hidden = !user; });
-    if (user) load();
+    if (!user) { show("login"); setTimeout(() => $("login-user").focus(), 0); return; }
+    $("c-who").textContent = user.email;
+    $("who-box").hidden = false;
+    show("app");
+    document.querySelectorAll(".to-candidates").forEach((b) => { b.hidden = false; });
+    load();
   }
-  $("c-login-form").addEventListener("submit", async (e) => {
+  $("pass-toggle").addEventListener("click", () => {
+    const i = $("login-pass"), t = $("pass-toggle");
+    const showing = i.type === "text";
+    i.type = showing ? "password" : "text";
+    t.textContent = showing ? "Dikhao" : "Lukao";
+    t.setAttribute("aria-label", showing ? "Password dikhao" : "Password lukao");
+  });
+  $("login-form").addEventListener("submit", async (e) => {
     e.preventDefault();
-    msg("Login ho reha hai...");
-    const { error } = await sb.auth.signInWithPassword({ email: $("c-email").value.trim(), password: $("c-pass").value });
-    if (error) { msg("Login nahi hoya: email ja password galat hai.", true); return; }
-    $("c-pass").value = "";
-    msg("");
+    const lm = $("login-msg"), btn = $("login-btn");
+    let id = $("login-user").value.trim().toLowerCase();
+    const pass = $("login-pass").value;
+    if (!id || !pass) { lm.textContent = "User ID te password dovein bharo."; return; }
+    if (!id.includes("@")) id = `${id}@${LOGIN_DOMAIN}`; // short user IDs like "rahul"
+    lm.textContent = ""; btn.disabled = true; btn.textContent = "Login ho reha hai...";
+    const { error } = await sb.auth.signInWithPassword({ email: id, password: pass });
+    btn.disabled = false; btn.textContent = "Login";
+    if (error) {
+      lm.textContent = /fetch|network/i.test(error.message || "")
+        ? "Internet naal judan vich dikkat hai. Thodi der baad try karo."
+        : "User ID ja password galat hai.";
+      return;
+    }
+    $("login-pass").value = "";
     refreshAuth();
   });
-  $("c-logout").addEventListener("click", async () => { await sb.auth.signOut(); rows = []; tbody.replaceChildren(); refreshAuth(); });
+  $("c-logout").addEventListener("click", async () => {
+    await sb.auth.signOut();
+    rows = []; tbody.replaceChildren();
+    $("who-box").hidden = true;
+    refreshAuth();
+  });
 
   // ------------------------------------------------------------ list
   async function load() {
@@ -128,6 +161,8 @@
     head.append(b);
   });
 
-  sb.auth.onAuthStateChange(() => refreshAuth());
+  // session expired or logged out in another tab -> back to the login page
+  // (never call supabase inside this callback directly; defer it)
+  sb.auth.onAuthStateChange((event) => { if (event === "SIGNED_OUT") setTimeout(refreshAuth, 0); });
   refreshAuth();
 })();

@@ -31,6 +31,10 @@ Candidate list sirf login kitti hoyi team nu dikhdi hai. Asli mobile number te e
 4. **Authentication → Users → Add user → Create new user** naal team de har bande da email te password banao.
 5. **Project Settings → API** ton **Project URL** te **anon / publishable key** copy karke `config.js` vich pao.
    `service_role` key kade vi `config.js` vich na pao.
-6. Website kholo. Thalle **Candidate list** aayegi, ethe login karo.
+6. Website kholo. Pehlan login page aayega.
+
+### Chhoti User ID (jiven `rahul`)
+Supabase vich user di email `rahul@awasthiresume.com` rakho (eh asli email hon di lod nahi, bas **Auto Confirm User** te tick lagao).
+Phir login page te sirf `rahul` likh ke login ho sakda hai. Asli email (jiven `backup91hr@gmail.com`) naal vi login hunda hai.
 
 `config.js` khaali hove taan candidate list lukki rehndi hai, par resume masking kamm kardi rehndi hai.

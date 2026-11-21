@@ -128,13 +128,113 @@
   #c-msg { font-size: 14px; color: var(--ok); min-height: 1.2em; }
   #c-msg.err { color: var(--err); }
   .login { display: grid; gap: 12px; max-width: 380px; }
+
+  /* ---------- login screen ---------- */
+  :root { --brand-bg: #0f2a4a; --brand-bg2: #16385f; --brand-fg: #eaf0f8; --brand-muted: #a9bad0; --brand-mark: #f2b33d; }
+  .boot { min-height: 100vh; display: grid; place-items: center; color: var(--muted); font-size: 14px; }
+  .spinner { width: 28px; height: 28px; border: 3px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 10px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .login-screen { min-height: 100vh; display: grid; grid-template-columns: 1.05fr 1fr; background: var(--bg); }
+  .brand-side { background: linear-gradient(160deg, var(--brand-bg) 0%, var(--brand-bg2) 100%); color: var(--brand-fg);
+    padding-block: 48px; padding-left: max(32px, env(safe-area-inset-left, 0px)); padding-right: 32px;
+    display: flex; flex-direction: column; justify-content: space-between; gap: 36px; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-logo { width: 44px; height: 44px; flex: none; }
+  .brand-name { font-family: var(--font-display); font-weight: 700; font-size: 22px; letter-spacing: -0.01em; line-height: 1.1; }
+  .brand-name small { display: block; font-family: var(--font-body); font-weight: 500; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--brand-mark); margin-top: 3px; }
+  .brand-pitch h2 { font-family: var(--font-display); font-size: clamp(28px, 3.4vw, 40px); line-height: 1.12; margin: 0 0 14px; letter-spacing: -0.015em; text-wrap: balance; }
+  .brand-pitch h2 mark { background: none; color: var(--brand-mark); }
+  .brand-pitch p { color: var(--brand-muted); margin: 0; max-width: 46ch; font-size: 16px; }
+  .cv-card { background: #fff; color: #1f2937; border-radius: 10px; padding: 20px 22px; max-width: 380px; box-shadow: 0 18px 40px rgba(0,0,0,.28); transform: rotate(-1.5deg); }
+  .cv-card .cv-name { font-family: var(--font-display); font-weight: 700; font-size: 18px; }
+  .cv-card .cv-role { color: #6b7280; font-size: 13px; margin-bottom: 12px; }
+  .cv-line { display: flex; gap: 8px; font-size: 13px; padding: 3px 0; align-items: baseline; }
+  .cv-line b { width: 54px; color: #6b7280; font-weight: 500; flex: none; }
+  .cv-mask { font-family: var(--font-mono); position: relative; display: inline-grid; }
+  .cv-mask > span { grid-area: 1 / 1; }
+  .cv-mask .after { color: #0f2a4a; font-weight: 500; background: #fdf1d6; border-radius: 3px; padding: 0 3px; margin: 0 -3px; animation: maskin 6s ease-in-out infinite; }
+  .cv-mask .before { animation: maskout 6s ease-in-out infinite; }
+  @keyframes maskin { 0%, 30% { opacity: 0; } 42%, 92% { opacity: 1; } 100% { opacity: 0; } }
+  @keyframes maskout { 0%, 30% { opacity: 1; } 42%, 92% { opacity: 0; } 100% { opacity: 1; } }
+  .cv-bars { margin-top: 12px; display: grid; gap: 6px; }
+  .cv-bars i { display: block; height: 7px; border-radius: 4px; background: #e5e7eb; }
+  .features { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; color: var(--brand-muted); font-size: 14px; }
+  .features li { display: flex; gap: 10px; align-items: center; }
+  .features li::before { content: ""; width: 8px; height: 8px; border-radius: 2px; background: var(--brand-mark); flex: none; }
+  .form-side { display: grid; place-items: center; padding-block: 48px; padding-left: 24px; padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+  .login-card { width: 100%; max-width: 380px; display: grid; gap: 22px; }
+  .login-card h1 { font-size: 28px; }
+  .login-card .sub { font-size: 15px; margin-top: 6px; }
+  .login-card form { display: grid; gap: 16px; }
+  .pass-wrap { position: relative; }
+  .pass-wrap input { padding-right: 70px; }
+  .pass-toggle { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); padding: 4px 10px; font-size: 13px; background: transparent; color: var(--accent); border: 0; }
+  .login-card .primary { width: 100%; padding: 12px 16px; font-size: 16px; }
+  #login-msg { min-height: 1.3em; font-size: 14px; color: var(--err); margin: -4px 0 0; }
+  .help { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+  .app-bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+  .app-bar .brand-name { color: var(--fg); font-size: 18px; }
+  .app-bar .who { font-size: 13px; color: var(--muted); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  @media (max-width: 820px) {
+    .login-screen { grid-template-columns: 1fr; }
+    .brand-side { padding-block: 28px; padding-right: max(20px, env(safe-area-inset-right, 0px)); padding-left: max(20px, env(safe-area-inset-left, 0px)); gap: 22px; }
+    .cv-card, .features { display: none; }
+    .form-side { padding-block: 32px; place-items: start center; }
+  }
+  @media (prefers-reduced-motion: reduce) { .cv-mask .after { animation: none; opacity: 1; } .cv-mask .before { animation: none; opacity: 0; } .spinner { animation-duration: 2s; } }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="boot" id="boot"><div><div class="spinner"></div>Khul reha hai...</div></div>
+
+<main class="login-screen" id="login-screen" hidden>
+  <section class="brand-side">
+    <div class="brand"><svg class="brand-logo" viewBox="0 0 44 44" aria-hidden="true"><rect x="7" y="3" width="30" height="38" rx="4" fill="#ffffff"/><rect x="12" y="10" width="14" height="3" rx="1.5" fill="#9fb3cc"/><rect x="12" y="17" width="20" height="2.5" rx="1.25" fill="#d6dee9"/><rect x="11" y="23" width="22" height="6" rx="1.5" fill="#f2b33d"/><rect x="12" y="33" width="16" height="2.5" rx="1.25" fill="#d6dee9"/></svg><div class="brand-name">Awasthi Resume<small>Resume Mask Software</small></div></div>
+    <div class="brand-pitch">
+      <h2>Resume bhejo, <mark>contact lukao</mark>.</h2>
+      <p>Client nu resume bhejan ton pehlan candidate da mobile number te email aap <span class="mono">X</span> ban jaande ne. PDF, Word, scanned PDF te photo, sab chalde ne.</p>
+    </div>
+    <div class="cv-card" aria-hidden="true">
+      <div class="cv-name">Simran Kaur</div>
+      <div class="cv-role">Accounts Executive · Ludhiana</div>
+      <div class="cv-line"><b>Mobile</b><span class="cv-mask"><span class="before">98140 12345</span><span class="after">XXXXX XXX45</span></span></div>
+      <div class="cv-line"><b>Email</b><span class="cv-mask"><span class="before">simran.kaur@gmail.com</span><span class="after">XXXXXXXXXX.com</span></span></div>
+      <div class="cv-line"><b>Skills</b><span>Tally, GST, Excel</span></div>
+      <div class="cv-bars"><i style="width:92%"></i><i style="width:78%"></i><i style="width:85%"></i></div>
+    </div>
+    <ul class="features">
+      <li>Mobile de pehle 8 digit te poori email ID lukdi hai</li>
+      <li>Resume tuhade browser vich hi process hunde ne</li>
+      <li>Team layi candidate list, search te status naal</li>
+    </ul>
+  </section>
+  <section class="form-side">
+    <div class="login-card">
+      <div>
+        <h1>Login karo</h1>
+        <p class="sub">Apni User ID te password naal andar aao.</p>
+      </div>
+      <form id="login-form" novalidate>
+        <label class="field">User ID ja Email<input id="login-user" autocomplete="username" autocapitalize="none" spellcheck="false" required placeholder="jiven: rahul ja rahul@gmail.com"></label>
+        <label class="field">Password
+          <span class="pass-wrap"><input id="login-pass" type="password" autocomplete="current-password" required><button class="pass-toggle" id="pass-toggle" type="button" aria-label="Password dikhao">Dikhao</button></span>
+        </label>
+        <p id="login-msg" role="alert"></p>
+        <button class="primary" id="login-btn" type="submit">Login</button>
+      </form>
+      <p class="help">Password bhul gaye ja navi ID chahidi hai? Admin naal gall karo.</p>
+    </div>
+  </section>
+</main>
+
+<div class="wrap" id="app" hidden>
+  <div class="app-bar">
+    <div class="brand"><svg class="brand-logo" style="width:34px;height:34px" viewBox="0 0 44 44" aria-hidden="true"><rect x="7" y="3" width="30" height="38" rx="4" fill="#ffffff"/><rect x="12" y="10" width="14" height="3" rx="1.5" fill="#9fb3cc"/><rect x="12" y="17" width="20" height="2.5" rx="1.25" fill="#d6dee9"/><rect x="11" y="23" width="22" height="6" rx="1.5" fill="#f2b33d"/><rect x="12" y="33" width="16" height="2.5" rx="1.25" fill="#d6dee9"/></svg><div class="brand-name">Awasthi Resume<small>Resume Mask Software</small></div></div>
+    <div class="who" id="who-box" hidden><span>Login: <strong id="c-who"></strong></span><button class="ghost small" id="c-logout" type="button">Logout</button></div>
+  </div>
   <header>
-    <h1>Awasthi Resume</h1>
+    <h1>Resume mask karo</h1>
     <p class="lede">Resume pao, te mobile number de pehle 8 digit te email ID <code>X</code> ban jaange. PDF, Word (.docx), scanned PDF te photo (JPG/PNG) sab chalde ne. Files tuhade browser vich hi process hundian ne, kise server te upload nahi hundian.</p>
   </header>
 
@@ -182,19 +282,7 @@
       </div>
     </div>
 
-    <div class="login" id="c-login">
-      <form id="c-login-form" class="login">
-        <label class="field">Email<input id="c-email" type="email" autocomplete="username" required></label>
-        <label class="field">Password<input id="c-pass" type="password" autocomplete="current-password" required></label>
-        <button class="primary" type="submit">Login</button>
-      </form>
-    </div>
-
-    <div id="c-app" hidden>
-      <div class="row" style="margin-bottom:12px">
-        <span class="sub">Login: <strong id="c-who"></strong></span>
-        <button class="ghost small" id="c-logout" type="button">Logout</button>
-      </div>
+    <div id="c-app">
       <form id="c-form" class="grid-form">
         <label class="field">Naam *<input id="f-name" required maxlength="200" autocomplete="off"></label>
         <label class="field">Post / Job<input id="f-post" maxlength="200" placeholder="jiven Accountant"></label>
