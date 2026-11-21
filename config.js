@@ -15,4 +15,6 @@ window.AWASTHI_CONFIG = {
   gstPercent: 18,
   // payment is due this many days after the date of joining
   paymentDays: 60,
+  // added to the name of every downloaded resume: Name.pdf -> Name_AHRA.pdf
+  fileSuffix: "AHRA",
 };

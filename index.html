@@ -885,7 +885,11 @@
     say(`${name} downloaded and the email draft opened in Gmail. Add the client's email, attach the file with 📎, then send.`);
   }
 
-  function maskedName(name, ext) { return name.replace(/\.[^.]+$/, "") + "_masked." + ext; }
+  // "Amritpal_Singh.pdf" -> "Amritpal_Singh_AHRA.pdf" (suffix set in config.js)
+  function maskedName(name, ext) {
+    const sfx = ((window.AWASTHI_CONFIG && window.AWASTHI_CONFIG.fileSuffix) || "AHRA").replace(/[^\w-]/g, "");
+    return name.replace(/\.[^.]+$/, "") + "_" + sfx + "." + ext;
+  }
 
   async function processFile(file) {
     const ext = (file.name.split(".").pop() || "").toLowerCase();
@@ -975,7 +979,7 @@
   zipBtn.addEventListener("click", async () => {
     const zip = new JSZip(); const used = new Set();
     for (const d of done) { let n = d.name, k = 2; while (used.has(n)) n = d.name.replace(/(\.[^.]+)$/, `_${k++}$1`); used.add(n); zip.file(n, d.blob); }
-    save("masked_resumes.zip", await zip.generateAsync({ type: "blob" }));
+    save("AHRA_resumes.zip", await zip.generateAsync({ type: "blob" }));
   });
 
   // sample resume, made on the spot, with made-up details
