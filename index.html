@@ -418,7 +418,9 @@
 
   // ---------------------------------------------------------------- matching
   const EMAIL_MASK = "XXXXXXXXXX";
-  const EMAIL_RE = /[A-Za-z0-9._%+\-]+\s?@\s?[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)*\.[A-Za-z]{2,}/g;
+  const EMAIL_RE = /[A-Za-z0-9._%+\-]+\s?[@©®]\s?[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)*\.[A-Za-z]{2,}/g;
+  // OCR sometimes loses the @ entirely: catch common mail providers glued to the name
+  const EMAIL_NOAT_RE = /[A-Za-z0-9._%+\-]{3,}(?:gmail|googlemail|yahoo|ymail|hotmail|outlook|rediffmail|icloud|live|protonmail)\s?\.\s?(?:co\.in|com|in|net)\b/gi;
   const PHONE_RE = /(?<![\w@])\+?\(?\d[\d \-().]{8,20}\d(?![\w@])/g;
   const visibleDigits = () => Number(document.getElementById("visible").value);
   document.getElementById("visible").value = "2"; // always start at 2 (browsers may restore an old choice)
@@ -431,10 +433,12 @@
   function maskPhone(p) {
     const digits = p.replace(/\D/g, "");
     if (digits.length < 10 || digits.length > 13) return null;
-    const start = digits.length - 10, toMask = 10 - visibleDigits();
+    const extra = digits.length - 10, prefix = digits.slice(0, extra);
+    const keepPrefix = ["", "0", "91", "091", "0091"].includes(prefix);
+    const start = keepPrefix ? extra : 0, end = digits.length - visibleDigits(); // mask [start, end)
     let seen = 0, out = "";
     for (const c of p) {
-      if (/\d/.test(c)) { out += (seen >= start && seen < start + toMask) ? "X" : c; seen++; }
+      if (/\d/.test(c)) { out += (seen >= start && seen < end) ? "X" : c; seen++; }
       else out += c;
     }
     return out;
@@ -442,6 +446,10 @@
   function findMatches(text) {
     const found = [];
     for (const m of text.matchAll(EMAIL_RE)) found.push([m.index, m.index + m[0].length, m[0], maskEmail(m[0])]);
+    for (const m of text.matchAll(EMAIL_NOAT_RE)) {
+      const s = m.index, e = s + m[0].length;
+      if (!found.some(([fs, fe]) => s < fe && e > fs)) found.push([s, e, m[0], maskEmail(m[0])]);
+    }
     for (const m of text.matchAll(PHONE_RE)) {
       let s = m.index, e = s + m[0].length;
       if (found.some(([fs, fe]) => s < fe && e > fs)) continue;
@@ -478,11 +486,7 @@
   }
   let currentOcrProgress = null;
 
-  async function ocrHits(canvas, onProg) {
-    const worker = await getOcr(() => {});
-    currentOcrProgress = onProg;
-    const { data } = await worker.recognize(canvas, {}, { blocks: true, text: true });
-    currentOcrProgress = null;
+  function hitsFromOcr(data) {
     const hits = [], lineTexts = [];
     for (const block of data.blocks || []) for (const para of block.paragraphs) for (const line of para.lines) {
       let text = ""; const spans = [];
@@ -504,7 +508,26 @@
         if (x1 > 0) hits.push({ x0, y0, x1, y1, orig, masked, grow: 0.25, scale: 1.1 });
       }
     }
-    hits.text = data.text || lineTexts.join("\n"); // original text, used to fill the candidate form
+    return { hits, lineTexts };
+  }
+  async function ocrHits(canvas, onProg) {
+    const worker = await getOcr(() => {});
+    currentOcrProgress = (f) => onProg && onProg(f * 0.6);
+    const { data } = await worker.recognize(canvas, {}, { blocks: true, text: true });
+    const first = hitsFromOcr(data);
+    // light text on dark panels (sidebars, banners) is often missed: read an inverted copy as well
+    const inv = document.createElement("canvas");
+    inv.width = canvas.width; inv.height = canvas.height;
+    const ictx = inv.getContext("2d");
+    ictx.filter = "invert(1) grayscale(1)"; ictx.drawImage(canvas, 0, 0);
+    currentOcrProgress = (f) => onProg && onProg(0.6 + f * 0.4);
+    let second = { hits: [], lineTexts: [] };
+    try { second = hitsFromOcr((await worker.recognize(inv, {}, { blocks: true, text: false })).data); } catch (e) { /* extra pass only */ }
+    currentOcrProgress = null;
+    const overlaps = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+    const hits = first.hits.slice();
+    for (const h of second.hits) if (!hits.some((k) => overlaps(k, h))) hits.push(h);
+    hits.text = (data.text || first.lineTexts.join("\n")) + "\n" + second.lineTexts.join("\n"); // original text, for the candidate form
     return hits;
   }
 
@@ -545,20 +568,29 @@
   // ---------------------------------------------------------------- footer on every page
   const FOOTER_TEXT = () => (window.AWASTHI_CONFIG && window.AWASTHI_CONFIG.footerText !== undefined)
     ? window.AWASTHI_CONFIG.footerText : "Referred by Awasthi HR Associates (Ashish Awasthi)";
-  function drawFooter(canvas) {
-    const text = FOOTER_TEXT(); if (!text) return;
-    const ctx = canvas.getContext("2d");
-    let size = Math.max(12, Math.round(canvas.width * 0.017));
-    const font = (s) => `bold ${s}px Helvetica, Arial, sans-serif`;
+  // adds a white strip under the page with the highlighted red reference line, so it never covers the resume
+  function withFooter(canvas) {
+    const text = FOOTER_TEXT(); if (!text) return canvas;
+    let size = Math.max(14, Math.round(canvas.width * 0.019));
+    const font = (z) => `bold ${z}px Helvetica, Arial, sans-serif`;
+    const m = document.createElement("canvas").getContext("2d");
+    m.font = font(size);
+    while (size > 10 && m.measureText(text).width > canvas.width * 0.86) { size -= 1; m.font = font(size); }
+    const strip = Math.round(size * 2.6);
+    const out = document.createElement("canvas");
+    out.width = canvas.width; out.height = canvas.height + strip;
+    const ctx = out.getContext("2d");
+    ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, out.width, out.height);
+    ctx.drawImage(canvas, 0, 0);
     ctx.font = font(size);
-    while (size > 10 && ctx.measureText(text).width > canvas.width * 0.9) { size -= 1; ctx.font = font(size); }
-    const w = ctx.measureText(text).width, pad = size * 0.45;
-    const x = (canvas.width - w) / 2, y = canvas.height - size * 1.3;
-    ctx.fillStyle = "#ffffff"; // keep it readable over page content
-    ctx.fillRect(x - pad, y - size / 2 - pad * 0.7, w + pad * 2, size + pad * 1.4);
+    const w = ctx.measureText(text).width, padX = size * 0.6, padY = size * 0.35;
+    const x = (out.width - w) / 2, y = canvas.height + strip / 2;
+    ctx.fillStyle = "#ffe94d"; // highlighter yellow
+    ctx.fillRect(x - padX, y - size / 2 - padY, w + padX * 2, size + padY * 2);
     ctx.fillStyle = "#d00000";
     ctx.textBaseline = "middle"; ctx.textAlign = "left";
     ctx.fillText(text, x, y);
+    return out;
   }
   // Word: a real footer, so it shows at the bottom of every page
   async function addDocxFooter(zip) {
@@ -571,7 +603,7 @@
     const ser = (d) => { const x = new XMLSerializer().serializeToString(d); return x.startsWith("<?xml") ? x : '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n' + x; };
     const doc = parse(await docFile.async("string")), rels = parse(await relFile.async("string"));
     const esc = (t) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    const inner = `<w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val="D00000"/><w:sz w:val="18"/></w:rPr><w:t xml:space="preserve">${esc(text)}</w:t></w:r>`;
+    const inner = `<w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val="D00000"/><w:sz w:val="20"/><w:highlight w:val="yellow"/></w:rPr><w:t xml:space="preserve">${esc(text)}</w:t></w:r>`;
     const relById = {};
     for (const r of [...rels.getElementsByTagNameNS(PR, "Relationship")]) relById[r.getAttribute("Id")] = r.getAttribute("Target");
     const touched = new Set();
@@ -696,11 +728,11 @@
         }
       }
       paintHits(canvas, hits);
-      drawFooter(canvas);
       hits.forEach((h) => changes.push([h.orig, h.masked]));
       fullText += (hits.text || "") + "\n";
       const vp1 = page.getViewport({ scale: 1 });
-      out.push({ canvas, w: vp1.width, h: vp1.height });
+      const framed = withFooter(canvas); // page + reference strip
+      out.push({ canvas: framed, w: vp1.width, h: vp1.height * framed.height / canvas.height });
     }
     const { jsPDF } = window.jspdf;
     let pdf = null;
@@ -724,11 +756,11 @@
     await getOcr(progress);
     const hits = await ocrHits(canvas, (f) => progress(`OCR ${Math.round(f * 100)}%`, 0.2 + 0.7 * f));
     paintHits(canvas, hits);
-    drawFooter(canvas);
+    const framed = withFooter(canvas);
     const isJpg = /\.(jpe?g)$/i.test(file.name), isWebp = /\.webp$/i.test(file.name);
     const type = isJpg ? "image/jpeg" : isWebp ? "image/webp" : "image/png";
-    const blob = await new Promise((r) => canvas.toBlob(r, type, 0.95));
-    return { blob, changes: hits.map((h) => [h.orig, h.masked]), usedOcr: true, preview: canvas, ext: isJpg ? "jpg" : isWebp ? "webp" : "png", text: hits.text || "" };
+    const blob = await new Promise((r) => framed.toBlob(r, type, 0.95));
+    return { blob, changes: hits.map((h) => [h.orig, h.masked]), usedOcr: true, preview: framed, ext: isJpg ? "jpg" : isWebp ? "webp" : "png", text: hits.text || "" };
   }
 
   // ---------------------------------------------------------------- DOCX
