@@ -7,5 +7,7 @@ window.AWASTHI_CONFIG = {
   supabaseUrl: "https://yaasnoxuonyvetsonofx.supabase.co",
   supabaseAnonKey: "sb_publishable_0fvTKvYzfEK6WtazopJHUw_BYfi7FxS",
   // last line of the email draft (under "Thanks & Regards,")
-  emailSignature: "Awasthi Resume",
+  emailSignature: "Ashish Awasthi\nAwasthi HR Associates",
+  // red line printed at the bottom of every page of a masked resume ("" switches it off)
+  footerText: "Reference by Awasthi HR Associates (Ashish Awasthi)",
 };

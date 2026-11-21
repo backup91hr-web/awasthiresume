@@ -493,6 +493,86 @@
     }
   }
 
+  // ---------------------------------------------------------------- footer on every page
+  const FOOTER_TEXT = () => (window.AWASTHI_CONFIG && window.AWASTHI_CONFIG.footerText !== undefined)
+    ? window.AWASTHI_CONFIG.footerText : "Reference by Awasthi HR Associates (Ashish Awasthi)";
+  function drawFooter(canvas) {
+    const text = FOOTER_TEXT(); if (!text) return;
+    const ctx = canvas.getContext("2d");
+    let size = Math.max(12, Math.round(canvas.width * 0.017));
+    const font = (s) => `bold ${s}px Helvetica, Arial, sans-serif`;
+    ctx.font = font(size);
+    while (size > 10 && ctx.measureText(text).width > canvas.width * 0.9) { size -= 1; ctx.font = font(size); }
+    const w = ctx.measureText(text).width, pad = size * 0.45;
+    const x = (canvas.width - w) / 2, y = canvas.height - size * 1.3;
+    ctx.fillStyle = "#ffffff"; // keep it readable over page content
+    ctx.fillRect(x - pad, y - size / 2 - pad * 0.7, w + pad * 2, size + pad * 1.4);
+    ctx.fillStyle = "#d00000";
+    ctx.textBaseline = "middle"; ctx.textAlign = "left";
+    ctx.fillText(text, x, y);
+  }
+  // Word: a real footer, so it shows at the bottom of every page
+  async function addDocxFooter(zip) {
+    const text = FOOTER_TEXT(); if (!text) return;
+    const R = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
+    const PR = "http://schemas.openxmlformats.org/package/2006/relationships";
+    const docFile = zip.file("word/document.xml"), relFile = zip.file("word/_rels/document.xml.rels"), ctFile = zip.file("[Content_Types].xml");
+    if (!docFile || !relFile || !ctFile) return;
+    const parse = (x) => new DOMParser().parseFromString(x, "application/xml");
+    const ser = (d) => { const x = new XMLSerializer().serializeToString(d); return x.startsWith("<?xml") ? x : '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n' + x; };
+    const doc = parse(await docFile.async("string")), rels = parse(await relFile.async("string"));
+    const esc = (t) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const inner = `<w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val="D00000"/><w:sz w:val="18"/></w:rPr><w:t xml:space="preserve">${esc(text)}</w:t></w:r>`;
+    const relById = {};
+    for (const r of [...rels.getElementsByTagNameNS(PR, "Relationship")]) relById[r.getAttribute("Id")] = r.getAttribute("Target");
+    const touched = new Set();
+    let ownRid = null;
+    const ownFooter = () => {
+      if (ownRid) return ownRid;
+      ownRid = "rIdAwasthiFooter";
+      zip.file("word/footer_awasthi.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n<w:ftr xmlns:w="${W}" xmlns:r="${R}"><w:p>${inner}</w:p></w:ftr>`);
+      const rel = rels.createElementNS(PR, "Relationship");
+      rel.setAttribute("Id", ownRid); rel.setAttribute("Type", R + "/footer"); rel.setAttribute("Target", "footer_awasthi.xml");
+      rels.documentElement.appendChild(rel);
+      return ownRid;
+    };
+    for (const sect of [...doc.getElementsByTagNameNS(W, "sectPr")]) {
+      const refs = [...sect.getElementsByTagNameNS(W, "footerReference")];
+      const types = new Set(refs.map((r) => r.getAttributeNS(W, "type")));
+      // add our line to every footer this section already uses
+      for (const ref of refs) {
+        const target = relById[ref.getAttributeNS(R, "id")];
+        if (!target || touched.has(target)) continue;
+        touched.add(target);
+        const path = "word/" + target.replace(/^\/?word\//, "").replace(/^\//, "");
+        const ff = zip.file(path); if (!ff) continue;
+        const fd = parse(await ff.async("string"));
+        const p = parse(`<w:p xmlns:w="${W}">${inner}</w:p>`).documentElement;
+        fd.documentElement.appendChild(fd.importNode(p, true));
+        zip.file(path, ser(fd));
+      }
+      // pages without a footer get ours (normal pages, and the first page when it has its own)
+      const need = [];
+      if (!types.has("default")) need.push("default");
+      if (sect.getElementsByTagNameNS(W, "titlePg").length && !types.has("first")) need.push("first");
+      for (const t of need) {
+        const ref = doc.createElementNS(W, "w:footerReference");
+        ref.setAttributeNS(W, "w:type", t); ref.setAttributeNS(R, "r:id", ownFooter());
+        // header/footer references must come first inside sectPr
+        let after = null; for (const c of [...sect.children]) if (/^(headerReference|footerReference)$/.test(c.localName)) after = c;
+        sect.insertBefore(ref, after ? after.nextSibling : sect.firstChild);
+      }
+    }
+    zip.file("word/document.xml", ser(doc));
+    zip.file("word/_rels/document.xml.rels", ser(rels));
+    if (ownRid) {
+      let ct = await ctFile.async("string");
+      if (!ct.includes("/word/footer_awasthi.xml"))
+        ct = ct.replace("</Types>", '<Override PartName="/word/footer_awasthi.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/></Types>');
+      zip.file("[Content_Types].xml", ct);
+    }
+  }
+
   // ---------------------------------------------------------------- PDF
   async function pdfTextHits(page, viewport) {
     const tc = await page.getTextContent();
@@ -567,6 +647,7 @@
         }
       }
       paintHits(canvas, hits);
+      drawFooter(canvas);
       hits.forEach((h) => changes.push([h.orig, h.masked]));
       fullText += (hits.text || "") + "\n";
       const vp1 = page.getViewport({ scale: 1 });
@@ -594,6 +675,7 @@
     await getOcr(progress);
     const hits = await ocrHits(canvas, (f) => progress(`OCR ${Math.round(f * 100)}%`, 0.2 + 0.7 * f));
     paintHits(canvas, hits);
+    drawFooter(canvas);
     const isJpg = /\.(jpe?g)$/i.test(file.name), isWebp = /\.webp$/i.test(file.name);
     const type = isJpg ? "image/jpeg" : isWebp ? "image/webp" : "image/png";
     const blob = await new Promise((r) => canvas.toBlob(r, type, 0.95));
@@ -646,6 +728,7 @@
         if (out !== src) zip.file(name, out);
       }
     }
+    await addDocxFooter(zip);
     const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE",
       mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
     return { blob, changes, usedOcr: false, preview: null, ext: "docx", text: allText.join("\n") };
