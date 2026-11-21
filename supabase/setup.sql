@@ -33,3 +33,8 @@ create policy "team can read"   on public.candidates for select to authenticated
 create policy "team can add"    on public.candidates for insert to authenticated with check (true);
 create policy "team can edit"   on public.candidates for update to authenticated using (true) with check (true);
 create policy "team can delete" on public.candidates for delete to authenticated using (true);
+
+-- candidate's full mobile number and email (same as 002_add_mobile_email.sql)
+alter table public.candidates add column if not exists mobile text check (char_length(mobile) <= 30);
+alter table public.candidates add column if not exists email  text check (char_length(email) <= 200);
+create index if not exists candidates_mobile_idx on public.candidates (mobile);
