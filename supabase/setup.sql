@@ -42,3 +42,7 @@ create index if not exists candidates_mobile_idx on public.candidates (mobile);
 -- client company and HR name (same as 003_add_company_hr.sql)
 alter table public.candidates add column if not exists company text check (char_length(company) <= 200);
 alter table public.candidates add column if not exists hr_name text check (char_length(hr_name) <= 200);
+
+-- date of joining and PAN for selected candidates (same as 004_add_doj_pan.sql)
+alter table public.candidates add column if not exists doj date;
+alter table public.candidates add column if not exists pan text check (pan is null or pan ~ '^[A-Z]{5}[0-9]{4}[A-Z]$');

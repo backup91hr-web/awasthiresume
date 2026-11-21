@@ -136,6 +136,9 @@
   .ctable td.mono.small { max-width: 170px; overflow: hidden; text-overflow: ellipsis; }
   button.small { padding: 4px 9px; font-size: 13px; margin-right: 4px; }
   button.icon { padding: 4px 8px; min-width: 32px; }
+  .report-btns { display: inline-flex; gap: 6px; margin-left: auto; }
+  .report-btns button { margin-right: 0; }
+  .doj { display: block; font-size: 11px; color: var(--muted); margin-top: 3px; white-space: nowrap; }
   button.danger { color: var(--err); }
   .chip.st-shortlisted, .chip.st-selected { background: var(--ok-soft); color: var(--ok); }
   .chip.st-sent-to-client { background: var(--warn-soft); color: var(--warn); }
@@ -306,7 +309,7 @@
   <section class="panel" id="candidates" hidden>
     <div class="row">
       <div>
-        <h2>Candidate list</h2>
+        <h2>Candidate Tracker</h2>
         <p class="sub">Only signed-in team members can see this list. It stores the candidate's full mobile number and email.</p>
       </div>
     </div>
@@ -324,6 +327,8 @@
             <option>New</option><option>Shortlisted</option><option>Sent to client</option><option>Selected</option><option>Rejected</option>
           </select>
         </label>
+        <label class="field joined" hidden>Date of joining (DOJ)<input id="f-doj" type="date"></label>
+        <label class="field joined" hidden>PAN number<input id="f-pan" maxlength="10" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. ABCDE1234F"></label>
         <label class="field">Company (sent to)<input id="f-company" maxlength="200" autocomplete="off" placeholder="e.g. Flipkart Minutes, Mohali"></label>
         <label class="field">HR name<input id="f-hr_name" maxlength="200" autocomplete="off" placeholder="e.g. Ms. Neha Sharma"></label>
         <label class="field">Masked resume file<input id="f-resume_file" maxlength="300" placeholder="Filled in automatically"></label>
@@ -341,6 +346,10 @@
           <option value="">All statuses</option><option>New</option><option>Shortlisted</option><option>Sent to client</option><option>Selected</option><option>Rejected</option>
         </select>
         <span class="sub" id="c-count"></span>
+        <span class="report-btns">
+          <button class="ghost small" id="r-xlsx" type="button" title="Download the list shown below as an Excel file">⬇ Excel report</button>
+          <button class="ghost small" id="r-pdf" type="button" title="Download the list shown below as a PDF">⬇ PDF report</button>
+        </span>
       </div>
       <div class="ctable">
         <table>
@@ -348,7 +357,7 @@
           <tbody id="c-rows"></tbody>
         </table>
       </div>
-      <p class="sub" id="c-empty" hidden>The list is empty. Fill in the form above to add the first candidate, or mask a resume and press "Add to candidate list".</p>
+      <p class="sub" id="c-empty" hidden>No candidates here yet. Fill in the form above to add one, or mask a resume and press "Add to candidate list".</p>
     </div>
   </section>
 
@@ -365,6 +374,7 @@
 <script src="lib/tesseract.min.js"></script>
 <script src="lib/jszip.min.js"></script>
 <script src="lib/jspdf.umd.min.js"></script>
+<script src="lib/jspdf.plugin.autotable.min.js"></script>
 <script src="lib/supabase.js"></script>
 <script src="config.js"></script>
 <script>
@@ -413,6 +423,7 @@
     return out + text.slice(last);
   }
   window.AwasthiMask = { maskText };
+  window.AwasthiSave = (name, blob) => save(name, blob);
 
   // ---------------------------------------------------------------- OCR
   let ocrWorker = null;
