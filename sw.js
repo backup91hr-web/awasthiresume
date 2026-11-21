@@ -1,6 +1,6 @@
 // Awasthi Resume service worker: lets Chrome install the site as an app and opens it fast.
 // Pages and settings always come fresh from the network when online; the big libraries are cached.
-const CACHE = "awasthi-v14";
+const CACHE = "awasthi-v15";
 const SHELL = ["./", "index.html", "candidates.js", "extract.js", "config.js", "manifest.json", "icons/icon-192.png"];
 
 self.addEventListener("install", (e) => {

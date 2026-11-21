@@ -309,7 +309,7 @@
     <div class="row">
       <div class="opts">
         <label for="visible">Show last</label>
-        <select id="visible">
+        <select id="visible" autocomplete="off">
           <option value="0">0</option>
           <option value="2" selected>2</option>
           <option value="4">4</option>
@@ -421,6 +421,8 @@
   const EMAIL_RE = /[A-Za-z0-9._%+\-]+\s?@\s?[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)*\.[A-Za-z]{2,}/g;
   const PHONE_RE = /(?<![\w@])\+?\(?\d[\d \-().]{8,20}\d(?![\w@])/g;
   const visibleDigits = () => Number(document.getElementById("visible").value);
+  document.getElementById("visible").value = "2"; // always start at 2 (browsers may restore an old choice)
+  window.addEventListener("pageshow", () => { document.getElementById("visible").value = "2"; });
 
   function maskEmail(e) {
     const tld = e.replace(/\s/g, "").split(".").pop();
