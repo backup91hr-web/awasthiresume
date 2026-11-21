@@ -58,32 +58,54 @@
   const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const wordRe = (w) => new RegExp(`(^|[^A-Za-z])${esc(w)}([^A-Za-z]|$)`, "i");
 
+  // does this look like a real person's name (not OCR noise like "Tlleeesseeseeeee")?
+  function plausibleName(n) {
+    const words = n.split(/\s+/).filter(Boolean);
+    if (words.length < 1 || words.length > 4) return false;
+    return words.every((w) => {
+      const x = w.replace(/\./g, "");
+      if (x.length === 1) return true; // initials like "K."
+      if (x.length > 14 || /(.)\1\1/i.test(x)) return false; // too long, or "eee"
+      const v = (x.match(/[aeiouy]/gi) || []).length / x.length;
+      return v >= 0.15 && v <= 0.7;
+    });
+  }
+
+  function nameFromFile(fileName) {
+    let n = (fileName || "").replace(/\.[^.]+$/, "").replace(/[_\-.]+/g, " ")
+      .replace(/\b(resume|cv|biodata|bio|data|updated|final|new|latest|copy|\d+)\b/gi, " ");
+    for (const c of CITIES) n = n.replace(wordRe(c), " ");
+    // generic scanner / phone file names are not a person's name
+    n = n.replace(/\b(scan|scanned|camscanner|document|doc|docs|img|image|photo|pic|whatsapp|wa|pdf|file|untitled|page|copy|of|and|at|am|pm|mr|ms|mrs)\b/gi, " ");
+    n = n.replace(/\s+/g, " ").trim();
+    return n.length >= 3 && plausibleName(n) ? titleCase(n) : "";
+  }
+
   function findName(lines, fileName) {
     for (const l of lines) {
       const m = l.match(/^\s*(?:full\s+)?name\s*[:\-–]\s*([A-Za-z][A-Za-z.' ]{2,50})$/i);
-      if (m) return titleCase(m[1]);
+      if (m && plausibleName(m[1].trim())) return titleCase(m[1]);
     }
-    for (const raw of lines.slice(0, 10)) {
+    const fromFile = nameFromFile(fileName);
+    const fileWords = fromFile.toLowerCase().split(" ").filter((w) => w.length >= 3);
+    let fromText = "";
+    for (const raw of lines.slice(0, 12)) {
       const l = raw.replace(/^[^A-Za-z]+|[^A-Za-z.]+$/g, "");
-      const words = l.split(/\s+/).filter(Boolean);
-      if (words.length < 1 || words.length > 4) continue;
       if (!/^[A-Za-z][A-Za-z.' ]{2,40}$/.test(l)) continue;
       if (NOT_NAME.test(l) || TITLES.some((t) => wordRe(t).test(l)) || CITIES.some((c) => c.toLowerCase() === l.toLowerCase())) continue;
-      return titleCase(l);
+      if (!plausibleName(l)) continue;
+      // a line that shares a word with the file name is almost surely the name
+      if (fileWords.some((w) => l.toLowerCase().split(/\s+/).includes(w))) return titleCase(l);
+      if (!fromText && l.split(/\s+/).length >= 2) fromText = titleCase(l);
     }
-    // fall back to the file name: "Amritpal_Singh_PATIALA.pdf" -> "Amritpal Singh"
-    let n = (fileName || "").replace(/\.[^.]+$/, "").replace(/[_\-.]+/g, " ")
-      .replace(/\b(resume|cv|biodata|updated|final|new|latest|copy|\d+)\b/gi, " ");
-    for (const c of CITIES) n = n.replace(wordRe(c), " ");
-    // generic scanner / phone file names are not a person's name
-    n = n.replace(/\b(scan|scanned|camscanner|document|doc|docs|img|image|photo|pic|whatsapp|wa|pdf|file|untitled|page|copy|of|and|at|am|pm)\b/gi, " ");
-    n = n.replace(/\s+/g, " ").trim();
-    return n.length >= 3 && /[a-z]/i.test(n) ? titleCase(n) : "";
+    // the person who saved the file named it: trust a real-looking file name over a guess from the text
+    return fromFile || fromText;
   }
 
   function findCity(lines, fileName) {
     const prio = lines.filter((l) => /address|city|location|residence|resident|r\/o|village|vpo|v\.?p\.?o|distt?|tehsil|pin/i.test(l));
-    for (const group of [prio, lines, [fileName || ""]]) {
+    const fileText = (fileName || "").replace(/\.[^.]+$/, "").replace(/[_\-.]+/g, " ");
+    for (const group of [[fileText], prio, lines]) {
       const text = group.join(" \n ");
       let best = null;
       for (const c of CITIES) {
@@ -144,11 +166,16 @@
       for (const l of lines.slice(start + 1, start + 10)) {
         const clean = l.replace(/^\W+/, "").trim();
         if (!clean) continue;
-        if (HEADING.test(clean) && clean.split(/\s+/).length <= 4) break;
+        if (HEADING.test(clean) && (clean.split(/\s+/).length <= 4 || clean === clean.toUpperCase())) break;
+        const letters = clean.replace(/[^A-Za-z]/g, "");
+        if (letters.length >= 6 && letters === letters.toUpperCase() && clean.split(/\s+/).length <= 6) break; // ALL-CAPS heading
         parts.push(clean);
         if (parts.join(", ").length > 260) break;
       }
       let s = parts.join(", ").replace(/\s*[•●▪■◦*|]\s*/g, ", ").replace(/\s{2,}/g, " ").replace(/(,\s*){2,}/g, ", ").replace(/^,\s*|,\s*$/g, "");
+      // drop OCR noise pieces like "I eee." or "~~"
+      s = s.split(/\s*,\s*/).filter((x) => { const t = x.replace(/[^A-Za-z]/g, ""); return t.length >= 2 && !/(.)\1\1/i.test(t); }).join(", ");
+      s = s.replace(/\s*[+]\s*/g, ", ");
       if (s.length > 250) s = s.slice(0, 250).replace(/,[^,]*$/, "");
       if (s.length >= 3) return s;
     }
