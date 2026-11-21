@@ -146,8 +146,13 @@
   });
 
   // fill the form from a masked resume (Download / Send buttons, or "Add to candidate list")
+  // the email / WhatsApp buttons read the form, so the team's corrections are used
+  window.AwasthiCurrentDetails = () => Object.fromEntries(["name", "mobile", "email", "post", "city", "experience_years", "skills", "resume_file"].map((f) => [f, $("f-" + f).value.trim()]));
+
   function prefill(d, scroll) {
     if (!user || !d) return;
+    // this resume is already in the form (maybe corrected by hand): keep it
+    if (!scroll && d.resume_file && $("f-resume_file").value === d.resume_file) return;
     if (editingId) { msg("Save or cancel the edit in progress first, then the resume details can be filled in.", true); return; }
     resetForm();
     ["name", "mobile", "email", "post", "city", "skills", "resume_file"].forEach((f) => { if (d[f]) $("f-" + f).value = d[f]; });

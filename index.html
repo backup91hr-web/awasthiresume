@@ -698,7 +698,7 @@
     return t;
   }
   async function shareWhatsApp(name, blob, details) {
-    const text = waText(details);
+    const text = waText(currentDetails(name, details));
     const f = new File([blob], name, { type: blob.type || "application/octet-stream" });
     // phone / Windows Chrome: share sheet with the file attached -> pick WhatsApp
     if (navigator.canShare && navigator.share && navigator.canShare({ files: [f] })) {
@@ -713,9 +713,39 @@
 
   // ---------------------------------------------------------------- Email
   const MAIL_ICON = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M3 6h18v12H3z"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="m3 7 9 6 9-6"/></svg>';
+  // use what the team typed in the candidate form for this resume, if anything
+  function currentDetails(name, details) {
+    const f = window.AwasthiCurrentDetails ? window.AwasthiCurrentDetails() : null;
+    if (!f || f.resume_file !== name) return details || {};
+    const out = { ...(details || {}) };
+    for (const k of Object.keys(f)) if (f[k] !== "" && f[k] != null) out[k] = f[k];
+    return out;
+  }
+  function emailDraft(name, d) {
+    const post = d.post || "", city = d.city || "", exp = d.experience_years;
+    const hasExp = exp !== null && exp !== undefined && exp !== "";
+    const subject = ["Candidate Profile", d.name, post, city].filter(Boolean).join(" | ");
+    const forWhat = post && city ? `for the position of ${post} at ${city}`
+      : post ? `for the position of ${post}` : city ? `for the opening at ${city}` : "for your requirement";
+    const lines = [
+      "Dear Sir,",
+      "",
+      `Greetings! Please find attached the resume of a suitable candidate ${forWhat}.`,
+      "",
+      "Candidate summary:",
+    ];
+    if (d.name) lines.push(`- Name: ${d.name}`);
+    if (post) lines.push(`- Designation: ${post}`);
+    if (city) lines.push(`- Location: ${city}`);
+    if (hasExp) lines.push(`- Total experience: ${exp} year${Number(exp) === 1 ? "" : "s"}`);
+    if (d.skills) lines.push(`- Key skills: ${d.skills}`);
+    lines.push(`- Attachment: ${name}`, "",
+      "Kindly review the profile and share your feedback, or let us know a convenient time for an interview.",
+      "", "Thanks & Regards,", (window.AWASTHI_CONFIG && window.AWASTHI_CONFIG.emailSignature) || "Awasthi Resume");
+    return { subject, body: lines.join("\n") };
+  }
   async function shareEmail(name, blob, details) {
-    const subject = waText(details);
-    const body = `Hello,\n\nPlease find the candidate's resume attached: ${name}\n\n${subject}\n\nRegards,\nAwasthi Resume`;
+    const { subject, body } = emailDraft(name, currentDetails(name, details));
     const f = new File([blob], name, { type: blob.type || "application/octet-stream" });
     // phone / Windows Chrome: share sheet with the file attached -> pick Gmail or Outlook
     if (navigator.canShare && navigator.share && navigator.canShare({ files: [f] })) {
@@ -725,7 +755,7 @@
     // otherwise: save the file and open a Gmail draft with subject and message filled in
     await save(name, blob);
     window.open("https://mail.google.com/mail/?view=cm&fs=1&su=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body), "_blank", "noopener");
-    say(`${name} downloaded and a Gmail draft opened. Attach the file with 📎, add the client's email, then send.`);
+    say(`${name} downloaded and the email draft opened in Gmail. Add the client's email, attach the file with 📎, then send.`);
   }
 
   function maskedName(name, ext) { return name.replace(/\.[^.]+$/, "") + "_masked." + ext; }
