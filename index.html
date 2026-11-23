@@ -670,6 +670,17 @@
   }
 
   // ---------------------------------------------------------------- PDF
+  // a page with (almost) nothing on it: fewer than 1 in 2000 pixels darker than near-white
+  function isBlankPage(canvas) {
+    const small = document.createElement("canvas");
+    small.width = 120; small.height = Math.max(1, Math.round(120 * canvas.height / canvas.width));
+    const sc = small.getContext("2d", { willReadFrequently: true });
+    sc.drawImage(canvas, 0, 0, small.width, small.height);
+    const d = sc.getImageData(0, 0, small.width, small.height).data;
+    let ink = 0;
+    for (let i = 0; i < d.length; i += 4) if (d[i] < 225 || d[i + 1] < 225 || d[i + 2] < 225) ink++;
+    return ink / (d.length / 4) < 0.0005;
+  }
   async function pdfTextHits(page, viewport) {
     const tc = await page.getTextContent();
     const items = tc.items.filter((it) => it.str && it.str.length);
@@ -713,7 +724,7 @@
 
   async function maskPdf(buf, progress) {
     const doc = await pdfjsLib.getDocument({ data: buf, isEvalSupported: false }).promise;
-    const out = []; const changes = []; let usedOcr = false; const SCALE = 3; let fullText = "";
+    const out = []; const changes = []; let usedOcr = false; const SCALE = 3; let fullText = ""; let skipped = 0;
     for (let p = 1; p <= doc.numPages; p++) {
       const page = await doc.getPage(p);
       const viewport = page.getViewport({ scale: SCALE });
@@ -723,6 +734,8 @@
       ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
       await page.render({ canvasContext: ctx, viewport }).promise;
       const base = (p - 1) / doc.numPages, step = 1 / doc.numPages;
+      // drop empty pages (stray page breaks in the original), but never all of them
+      if (doc.numPages > 1 && isBlankPage(canvas)) { skipped++; if (skipped < doc.numPages) continue; }
       progress(`Reading page ${p}/${doc.numPages}...`, base + step * 0.2);
       let hits = await pdfTextHits(page, viewport);
       if (hits === null) {
