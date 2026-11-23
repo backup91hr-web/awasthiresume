@@ -19,5 +19,5 @@ window.AWASTHI_CONFIG = {
   fileSuffix: "AHRA",
   // starting choices for masking (can be changed on the page before adding resumes)
   maskDigits: 8,      // how many digits of the mobile number to hide (0-10)
-  maskEmail: "all",   // "all" = XXXXXXXXXX.com, or a number like 6 = hide only the first 6 characters
+  maskEmail: "all",   // "all" = XXXXXXXXXX.com, "0" = do not hide, or a number like 6 = hide only the first 6 characters
 };

@@ -93,6 +93,13 @@
   .em { display: inline-flex; align-items: center; gap: 7px; background: var(--surface); color: var(--fg); border-color: var(--line); }
   .em:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
   button.danger.remove { color: var(--err); border-color: var(--line); background: transparent; }
+  .pages-note { font-size: 13px; color: var(--muted); margin: 8px 0; }
+  .pages-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+  .page-thumb { margin: 0; display: grid; gap: 6px; justify-items: center; }
+  .page-thumb canvas { width: 120px; height: auto; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+  .page-thumb figcaption { display: grid; gap: 4px; justify-items: center; font-size: 12px; color: var(--muted); }
+  .page-thumb.is-removed canvas { opacity: .25; outline: 2px dashed var(--err); }
+  .page-x { margin-right: 0 !important; color: var(--err); }
   button.danger.remove:hover { border-color: var(--err); }
   .file-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
   .name { font-weight: 600; word-break: break-all; min-width: 0; }
@@ -313,7 +320,7 @@
           <select id="mask-digits" autocomplete="off"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select>
           <span>digits of the mobile</span></span>
         <span class="opt"><label for="mask-email">Mask</label>
-          <select id="mask-email" autocomplete="off"><option value="all">the full email ID</option><option value="2">first 2 characters</option><option value="4">first 4 characters</option><option value="6">first 6 characters</option><option value="8">first 8 characters</option><option value="10">first 10 characters</option><option value="12">first 12 characters</option><option value="15">first 15 characters</option><option value="20">first 20 characters</option></select>
+          <select id="mask-email" autocomplete="off"><option value="0">nothing (0)</option><option value="all">the full email ID</option><option value="2">first 2 characters</option><option value="4">first 4 characters</option><option value="6">first 6 characters</option><option value="8">first 8 characters</option><option value="10">first 10 characters</option><option value="12">first 12 characters</option><option value="15">first 15 characters</option><option value="20">first 20 characters</option></select>
           <span>of the email</span></span>
       </div>
       <div class="row" style="justify-content:flex-end">
@@ -439,6 +446,7 @@
   function maskEmail(e) {
     const clean = e.replace(/\s/g, "").replace(/[©®]/, "@");
     const mode = emailMode();
+    if (mode === "0") return e; // send the email as it is
     if (mode === "all") return `${EMAIL_MASK}.${clean.split(".").pop()}`;
     // hide only the first N characters, keep the rest as it is (the @ is never hidden)
     let left = Number(mode), out = "";
@@ -460,10 +468,10 @@
   }
   function findMatches(text) {
     const found = [];
-    for (const m of text.matchAll(EMAIL_RE)) found.push([m.index, m.index + m[0].length, m[0], maskEmail(m[0])]);
+    for (const m of text.matchAll(EMAIL_RE)) { const mk = maskEmail(m[0]); found.push([m.index, m.index + m[0].length, m[0], mk, mk === m[0]]); }
     for (const m of text.matchAll(EMAIL_NOAT_RE)) {
       const s = m.index, e = s + m[0].length;
-      if (!found.some(([fs, fe]) => s < fe && e > fs)) found.push([s, e, m[0], maskEmail(m[0])]);
+      if (!found.some(([fs, fe]) => s < fe && e > fs)) { const mk = maskEmail(m[0]); found.push([s, e, m[0], mk, mk === m[0]]); }
     }
     for (const m of text.matchAll(PHONE_RE)) {
       let s = m.index, e = s + m[0].length;
@@ -473,7 +481,8 @@
       const masked = maskPhone(raw2);
       if (masked && masked !== raw2) { s += lead; found.push([s, s + raw2.length, raw2, masked]); }
     }
-    return found.sort((a, b) => a[0] - b[0]);
+    // unchanged emails (mask set to 0) still block phone matches above, but are not "masked items"
+    return found.filter((f) => !f[4]).map((f) => f.slice(0, 4)).sort((a, b) => a[0] - b[0]);
   }
   function maskText(text) {
     let out = "", last = 0;
@@ -670,16 +679,21 @@
   }
 
   // ---------------------------------------------------------------- PDF
-  // a page with (almost) nothing on it: fewer than 1 in 2000 pixels darker than near-white
-  function isBlankPage(canvas) {
+  // an empty page: almost no ink, or only a page number / a word or two of text
+  async function isBlankPage(page, canvas) {
     const small = document.createElement("canvas");
-    small.width = 120; small.height = Math.max(1, Math.round(120 * canvas.height / canvas.width));
+    small.width = 160; small.height = Math.max(1, Math.round(160 * canvas.height / canvas.width));
     const sc = small.getContext("2d", { willReadFrequently: true });
     sc.drawImage(canvas, 0, 0, small.width, small.height);
     const d = sc.getImageData(0, 0, small.width, small.height).data;
     let ink = 0;
-    for (let i = 0; i < d.length; i += 4) if (d[i] < 225 || d[i + 1] < 225 || d[i + 2] < 225) ink++;
-    return ink / (d.length / 4) < 0.0005;
+    for (let i = 0; i < d.length; i += 4) if (d[i] < 215 || d[i + 1] < 215 || d[i + 2] < 215) ink++;
+    const share = ink / (d.length / 4);
+    if (share < 0.003) return true;
+    if (share > 0.03) return false;
+    let chars = 0;
+    try { chars = (await page.getTextContent()).items.map((it) => it.str).join("").replace(/\s+/g, "").length; } catch (e) { return false; }
+    return chars > 0 && chars < 15; // e.g. just "Page 2" or a footer line
   }
   async function pdfTextHits(page, viewport) {
     const tc = await page.getTextContent();
@@ -735,7 +749,7 @@
       await page.render({ canvasContext: ctx, viewport }).promise;
       const base = (p - 1) / doc.numPages, step = 1 / doc.numPages;
       // drop empty pages (stray page breaks in the original), but never all of them
-      if (doc.numPages > 1 && isBlankPage(canvas)) { skipped++; if (skipped < doc.numPages) continue; }
+      if (doc.numPages > 1 && await isBlankPage(page, canvas)) { skipped++; if (skipped < doc.numPages) continue; }
       progress(`Reading page ${p}/${doc.numPages}...`, base + step * 0.2);
       let hits = await pdfTextHits(page, viewport);
       if (hits === null) {
@@ -762,15 +776,20 @@
       const framed = withFooter(canvas); // page + reference strip
       out.push({ canvas: framed, w: vp1.width, h: vp1.height * framed.height / canvas.height });
     }
+    return { blob: buildPdf(out), changes, usedOcr, preview: out[0].canvas, ext: "pdf", text: fullText, pages: out, skipped };
+  }
+  // one PDF from page images; each page keeps its own size
+  function buildPdf(pages) {
     const { jsPDF } = window.jspdf;
     let pdf = null;
-    for (const pg of out) {
+    for (const pg of pages) {
+      if (!pg.jpeg) pg.jpeg = pg.canvas.toDataURL("image/jpeg", 0.9);
       const orient = pg.w > pg.h ? "l" : "p";
       if (!pdf) pdf = new jsPDF({ unit: "pt", format: [pg.w, pg.h], orientation: orient, compress: true });
       else pdf.addPage([pg.w, pg.h], orient);
-      pdf.addImage(pg.canvas.toDataURL("image/jpeg", 0.9), "JPEG", 0, 0, pg.w, pg.h, undefined, "FAST");
+      pdf.addImage(pg.jpeg, "JPEG", 0, 0, pg.w, pg.h, undefined, "FAST");
     }
-    return { blob: pdf.output("blob"), changes, usedOcr, preview: out[0].canvas, ext: "pdf", text: fullText };
+    return pdf.output("blob");
   }
 
   // ---------------------------------------------------------------- Image
@@ -987,16 +1006,48 @@
       chip.textContent = res.usedOcr ? "Scanned · OCR" : ext === "docx" ? "Word" : "PDF";
       const outName = maskedName(file.name, res.ext);
       if (res.changes.length) {
-        status.textContent = `${res.changes.length} item${res.changes.length === 1 ? "" : "s"} masked.`;
+        status.textContent = `${res.changes.length} item${res.changes.length === 1 ? "" : "s"} masked.` + (res.skipped ? ` ${res.skipped} empty page${res.skipped === 1 ? "" : "s"} removed.` : "");
         chip.classList.add("ok");
         body.append(el("div", { className: "changes" }, el("table", {},
           el("tr", {}, el("th", { textContent: "Before" }), el("th", { textContent: "After" })),
           ...res.changes.map(([o, m]) => el("tr", {}, el("td", { className: "mono", textContent: o }), el("td", { className: "mono masked", textContent: m }))))));
       } else {
-        status.textContent = "No mobile number or email found. Please check the resume yourself.";
-        chip.classList.add("warn");
+        if (maskDigits() === 0 && emailMode() === "0") {
+          status.textContent = "Nothing hidden: mobile and email are both set to 0, so they stay as they are.";
+          chip.classList.add("ok");
+        } else {
+          status.textContent = "No mobile number or email found. Please check the resume yourself.";
+          chip.classList.add("warn");
+        }
       }
-      if (res.preview) {
+      if (res.pages && res.pages.length > 1) {
+        // choose which pages go into the masked PDF (e.g. drop an empty page)
+        const removed = new Set();
+        const note = el("p", { className: "pages-note" });
+        const grid = el("div", { className: "pages-grid" });
+        const refresh = () => {
+          const kept = res.pages.filter((_, i) => !removed.has(i));
+          res.blob = buildPdf(kept);
+          if (entry) entry.blob = res.blob;
+          note.textContent = `${kept.length} of ${res.pages.length} pages will be sent.` + (removed.size ? " Removed pages are left out of Download, WhatsApp, Email and ZIP." : " Press ✕ on a page you do not want (for example an empty page).");
+        };
+        res.pages.forEach((pg, i) => {
+          const thumb = document.createElement("canvas");
+          thumb.width = 160; thumb.height = Math.round(160 * pg.canvas.height / pg.canvas.width);
+          thumb.getContext("2d").drawImage(pg.canvas, 0, 0, thumb.width, thumb.height);
+          const btn = el("button", { type: "button", className: "ghost small page-x", textContent: "✕ Remove" });
+          const fig = el("figure", { className: "page-thumb" }, thumb, el("figcaption", {}, `Page ${i + 1}`, btn));
+          btn.onclick = () => {
+            if (!removed.has(i) && removed.size === res.pages.length - 1) { say("At least one page has to stay."); return; }
+            if (removed.has(i)) { removed.delete(i); btn.textContent = "✕ Remove"; fig.classList.remove("is-removed"); }
+            else { removed.add(i); btn.textContent = "↺ Keep"; fig.classList.add("is-removed"); }
+            refresh();
+          };
+          grid.append(fig);
+        });
+        refresh();
+        body.append(el("details", { open: true }, el("summary", { textContent: `Pages (${res.pages.length})` }), note, grid));
+      } else if (res.preview) {
         const img = el("img", { className: "preview", alt: "First page of the masked resume" });
         img.src = res.preview.toDataURL("image/jpeg", 0.8);
         body.append(el("details", {}, el("summary", { textContent: "Preview (masked first page)" }), img));
@@ -1004,9 +1055,13 @@
       dl.disabled = false;
       // candidate details for the team list (original contact, read from the resume)
       const details = window.AwasthiExtract ? window.AwasthiExtract(res.text || "", file.name) : {};
-      const origs = res.changes.map(([o]) => o.replace(/\s*@\s*/, "@"));
+      const origs = res.changes.map(([o]) => o.replace(/\s*[@©®]\s*/, "@"));
       details.email = origs.find((o) => o.includes("@")) || "";
       details.mobile = origs.find((o) => !o.includes("@")) || "";
+      // nothing masked (0 digits / 0 email): still read the contacts for the tracker
+      const raw = res.text || "";
+      if (!details.email) { const m = raw.match(EMAIL_RE); if (m) details.email = m[0].replace(/\s*[@©®]\s*/, "@"); }
+      if (!details.mobile) for (const m of raw.matchAll(PHONE_RE)) { const d = m[0].replace(/\D/g, ""); if (d.length >= 10 && d.length <= 13) { details.mobile = m[0].trim(); break; } }
       details.resume_file = outName;
       details.skills = details.post || ""; // the team wants only the designation in Skills
       const prefill = () => document.dispatchEvent(new CustomEvent("resume-prefill", { detail: { details, scroll: false } }));
