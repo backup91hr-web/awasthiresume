@@ -75,7 +75,8 @@
   .drop strong { font-size: 16px; }
   .drop span { color: var(--muted); font-size: 14px; }
   .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
-  .opts { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; color: var(--muted); font-size: 14px; }
+  .opts { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; color: var(--muted); font-size: 14px; }
+  .opts .opt { display: inline-flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   select { font: inherit; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; }
 
   button { font: inherit; font-weight: 500; border-radius: 8px; padding: 9px 16px; cursor: pointer; border: 1px solid transparent; }
@@ -288,7 +289,7 @@
   </div>
   <header>
     <h1>Mask resumes</h1>
-    <p class="lede">Add a resume and the first 8 digits of the mobile number and the email ID become <code>X</code>. Works with PDF, Word (.docx), scanned PDF and photos (JPG/PNG). Files are processed in your browser and are never uploaded to a server.</p>
+    <p class="lede">Choose how many digits of the mobile number and characters of the email ID to hide, then add a resume. Hidden parts become <code>X</code>. Works with PDF, Word (.docx), scanned PDF and photos (JPG/PNG). Files are processed in your browser and are never uploaded to a server.</p>
   </header>
 
   <div class="example" aria-label="Example">
@@ -308,13 +309,12 @@
     </label>
     <div class="row">
       <div class="opts">
-        <label for="visible">Show last</label>
-        <select id="visible" autocomplete="off">
-          <option value="0">0</option>
-          <option value="2" selected>2</option>
-          <option value="4">4</option>
-        </select>
-        <span>digits of the mobile number</span>
+        <span class="opt"><label for="mask-digits">Mask first</label>
+          <select id="mask-digits" autocomplete="off"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select>
+          <span>digits of the mobile</span></span>
+        <span class="opt"><label for="mask-email">Mask</label>
+          <select id="mask-email" autocomplete="off"><option value="all">the full email ID</option><option value="2">first 2 characters</option><option value="4">first 4 characters</option><option value="6">first 6 characters</option><option value="8">first 8 characters</option><option value="10">first 10 characters</option><option value="12">first 12 characters</option><option value="15">first 15 characters</option><option value="20">first 20 characters</option></select>
+          <span>of the email</span></span>
       </div>
       <div class="row" style="justify-content:flex-end">
         <button class="ghost" id="sample" type="button">Try a sample resume</button>
@@ -422,13 +422,28 @@
   // OCR sometimes loses the @ entirely: catch common mail providers glued to the name
   const EMAIL_NOAT_RE = /[A-Za-z0-9._%+\-]{3,}(?:gmail|googlemail|yahoo|ymail|hotmail|outlook|rediffmail|icloud|live|protonmail)\s?\.\s?(?:co\.in|com|in|net)\b/gi;
   const PHONE_RE = /(?<![\w@])\+?\(?\d[\d \-().]{8,20}\d(?![\w@])/g;
-  const visibleDigits = () => Number(document.getElementById("visible").value);
-  document.getElementById("visible").value = "2"; // always start at 2 (browsers may restore an old choice)
-  window.addEventListener("pageshow", () => { document.getElementById("visible").value = "2"; });
+  // how much to hide: chosen before adding resumes; defaults from config.js
+  const CFG = () => window.AWASTHI_CONFIG || {};
+  const maskDigits = () => Number(document.getElementById("mask-digits").value);
+  const visibleDigits = () => 10 - maskDigits();
+  const emailMode = () => document.getElementById("mask-email").value;
+  function resetMaskOptions() { // browsers may restore an old choice: always start from the defaults
+    const d = Math.min(10, Math.max(0, Number(CFG().maskDigits ?? 8)));
+    document.getElementById("mask-digits").value = String(d);
+    const e = String(CFG().maskEmail ?? "all");
+    document.getElementById("mask-email").value = document.querySelector(`#mask-email option[value="${e}"]`) ? e : "all";
+  }
+  resetMaskOptions();
+  window.addEventListener("pageshow", resetMaskOptions);
 
   function maskEmail(e) {
-    const tld = e.replace(/\s/g, "").split(".").pop();
-    return `${EMAIL_MASK}.${tld}`;
+    const clean = e.replace(/\s/g, "").replace(/[©®]/, "@");
+    const mode = emailMode();
+    if (mode === "all") return `${EMAIL_MASK}.${clean.split(".").pop()}`;
+    // hide only the first N characters, keep the rest as it is (the @ is never hidden)
+    let left = Number(mode), out = "";
+    for (const c of clean) { if (left > 0 && c !== "@") { out += "X"; left--; } else out += c; }
+    return out;
   }
   function maskPhone(p) {
     const digits = p.replace(/\D/g, "");
@@ -456,7 +471,7 @@
       const raw = m[0], lead = raw.length - raw.replace(/^[ \-.(]+/, "").length;
       const raw2 = raw.replace(/^[ \-.(]+|[ \-.(]+$/g, "");
       const masked = maskPhone(raw2);
-      if (masked) { s += lead; found.push([s, s + raw2.length, raw2, masked]); }
+      if (masked && masked !== raw2) { s += lead; found.push([s, s + raw2.length, raw2, masked]); }
     }
     return found.sort((a, b) => a[0] - b[0]);
   }
